@@ -1,9 +1,15 @@
 "use strict";
+
 const { Model } = require("sequelize");
 
 module.exports = (sequelize, DataTypes) => {
-  class User extends Model {}
-  User.init(
+  class Song extends Model {
+    static associate(models) {
+      this.belongsToMany(models.Genre, { through: "Song_Genre" });
+    }
+  }
+
+  Song.init(
     {
       id: {
         type: DataTypes.INTEGER,
@@ -11,37 +17,29 @@ module.exports = (sequelize, DataTypes) => {
         autoIncrement: true,
         primaryKey: true,
       },
-      username: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      email: {
+      songname: {
         type: DataTypes.STRING,
         allowNull: false,
         unique: true,
       },
-      password: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      usertype: {
-        type: DataTypes.ENUM("admin", "user"),
+      created_by: {
+        type: DataTypes.INTEGER,
         allowNull: false,
       },
       createdAt: {
-        allowNull: false,
         type: DataTypes.DATE,
+        allowNull: false,
       },
       updatedAt: {
-        allowNull: false,
         type: DataTypes.DATE,
+        allowNull: false,
       },
     },
     {
       sequelize,
-      modelName: "User",
-      tableName: "users",
+      modelName: "Song",
+      tableName: "songs",
     }
   );
-  return User;
+  return Song;
 };
