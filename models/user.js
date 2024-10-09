@@ -1,5 +1,6 @@
 "use strict";
 const { Model } = require("sequelize");
+const { usertype1, usertype2 } = require("../services/constants");
 
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
@@ -30,7 +31,7 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
       },
       usertype: {
-        type: DataTypes.ENUM("admin", "user"),
+        type: DataTypes.ENUM(usertype1, usertype2),
         allowNull: false,
       },
     },
