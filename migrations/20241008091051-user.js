@@ -1,5 +1,7 @@
 "use strict";
 
+const { usertype1, usertype2 } = require("../services/constants");
+
 module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable("users", {
@@ -23,7 +25,7 @@ module.exports = {
         allowNull: false,
       },
       usertype: {
-        type: Sequelize.ENUM("admin", "user"),
+        type: Sequelize.ENUM(usertype1, usertype2),
         allowNull: false,
       },
       createdAt: {
