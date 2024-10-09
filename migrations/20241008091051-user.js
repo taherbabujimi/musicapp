@@ -1,6 +1,6 @@
 "use strict";
 
-const { usertype1, usertype2 } = require("../services/constants");
+const { USER_TYPE } = require("../services/constants");
 
 module.exports = {
   async up(queryInterface, Sequelize) {
@@ -25,7 +25,7 @@ module.exports = {
         allowNull: false,
       },
       usertype: {
-        type: Sequelize.ENUM(usertype1, usertype2),
+        type: Sequelize.ENUM(USER_TYPE.USER, USER_TYPE.ADMIN),
         allowNull: false,
       },
       createdAt: {
