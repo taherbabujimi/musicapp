@@ -5,7 +5,7 @@ const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class Song extends Model {
     static associate(models) {
-      this.belongsToMany(models.Genre, { through: "Song_Genre" });
+      this.belongsToMany(models.Genre, { through: "songs_genres" });
     }
   }
 
@@ -26,19 +26,12 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
-      createdAt: {
-        type: DataTypes.DATE,
-        allowNull: false,
-      },
-      updatedAt: {
-        type: DataTypes.DATE,
-        allowNull: false,
-      },
     },
     {
       sequelize,
       modelName: "Song",
       tableName: "songs",
+      timestamps: true,
     }
   );
   return Song;

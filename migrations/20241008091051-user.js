@@ -23,7 +23,7 @@ module.exports = {
         allowNull: false,
       },
       usertype: {
-        type: Sequelize.STRING,
+        type: Sequelize.ENUM("admin", "user"),
         allowNull: false,
       },
       createdAt: {

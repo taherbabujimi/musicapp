@@ -28,19 +28,12 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.ENUM("admin", "user"),
         allowNull: false,
       },
-      createdAt: {
-        allowNull: false,
-        type: DataTypes.DATE,
-      },
-      updatedAt: {
-        allowNull: false,
-        type: DataTypes.DATE,
-      },
     },
     {
       sequelize,
       modelName: "User",
       tableName: "users",
+      timestamps: true,
     }
   );
   return User;
