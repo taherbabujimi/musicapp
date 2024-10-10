@@ -20,6 +20,7 @@ const {
 } = require("../../services/responses");
 
 const Joi = require("joi");
+const { addGenreSchema } = require("../../services/validation/genreValidation");
 
 module.exports.registerUser = async (req, res) => {
   try {
@@ -117,11 +118,7 @@ module.exports.addSong = async (req, res) => {
 
   if (validationResponse) return;
 
-  const { songname } = req.body;
-
-  if (songname.trim() === "") {
-    return validationErrorResponseData(res, "All fields are required.", 400);
-  }
+  const { songname, genres } = req.body;
 
   const oldSong = await Models.Song.findOne({
     where: { songname: songname },
@@ -137,5 +134,53 @@ module.exports.addSong = async (req, res) => {
 
   const song = await Models.Song.create({ songname, created_by: req.user.id });
 
+  console.log("Genres:", genres);
+
+  const promises = [];
+
+  for (const genre_id of genres) {
+    const promise = song.addGenre(genre_id); // Pass only the genre_id
+    promises.push(promise);
+  }
+
+  Promise.all(promises)
+    .then((results) => {
+      console.log("All genres added successfully:", results);
+    })
+    .catch((err) => {
+      console.log("Error adding genres:", err);
+    });
+
   return successResponseData(res, song, 200, "Song added successfully.");
+};
+
+module.exports.addGenre = async (req, res) => {
+  if (req.user.usertype === "user") {
+    return errorResponseWithoutData(res, "Only admins can add genre.", 400);
+  }
+
+  const validationResponse = addGenreSchema(req, res);
+
+  if (validationResponse) return;
+
+  const { genrename } = req.body;
+
+  const oldGenre = await Models.Genre.findOne({
+    where: { genrename: genrename },
+  });
+
+  if (oldGenre) {
+    return errorResponseWithoutData(
+      res,
+      "Genre with this name already exist.",
+      400
+    );
+  }
+
+  const genre = await Models.Genre.create({
+    genrename,
+    created_by: req.user.id,
+  });
+
+  return successResponseData(res, genre, 200, "Genre created successfully.");
 };

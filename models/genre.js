@@ -5,8 +5,14 @@ const { Model, BelongsTo } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class Genre extends Model {
     static associate(models) {
-      this.belongsToMany(models.Song, { through: "songs_genres" });
-      this.belongsTo(models.User);
+      this.belongsToMany(models.Song, {
+        through: "songs_genres",
+        foreignKey: "genre_id",
+        otherKey: "song_id",
+      });
+      this.belongsTo(models.User, {
+        foreignKey: { field: "created_by" },
+      });
     }
   }
 
