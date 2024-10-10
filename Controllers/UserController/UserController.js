@@ -69,14 +69,18 @@ module.exports.userLogin = async (req, res) => {
   const validationResponse = userLoginSchema(req, res);
   if (validationResponse) return;
 
-  const { username, password } = req.body;
+  const { email, password } = req.body;
 
-  if (!password || !username) {
-    return errorResponseWithoutData(res, "Please provide password.", 400);
+  if (!password || !email) {
+    return errorResponseWithoutData(
+      res,
+      "Please provide email and password.",
+      400
+    );
   }
 
   const user = await Models.User.findOne({
-    where: { username: username },
+    where: { email: email },
   });
 
   if (!user) {
@@ -97,9 +101,10 @@ module.exports.userLogin = async (req, res) => {
 
   return successResponseData(
     res,
-    { user, accessToken },
+    { user },
     200,
-    "User logged in successfully."
+    "User logged in successfully.",
+    accessToken
   );
 };
 
