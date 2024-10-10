@@ -1,10 +1,14 @@
-const {getListOfUsers, getUserDataFromId, createUser, deleteUser} =  require("../Controllers/UserController/UserController.js");
+const {
+  registerUser,
+  userLogin,
+  addSong,
+} = require("../Controllers/UserController/UserController.js");
+const { verifyJWT } = require("../Middlewares/authMiddleware.js");
 
 const userRoute = require("express").Router();
 
-userRoute.get("/all", getListOfUsers);
-userRoute.get("/:id", getUserDataFromId);
-userRoute.delete("/:id", deleteUser);
-userRoute.post("/add", createUser);
+userRoute.post("/add", registerUser);
+userRoute.post("/login", userLogin);
+userRoute.post("/addSong", verifyJWT, addSong);
 
-module.exports =  userRoute;
+module.exports = userRoute;

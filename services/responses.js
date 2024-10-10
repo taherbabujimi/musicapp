@@ -17,7 +17,7 @@ module.exports = {
       });
     }
 
-    return res.send(response);
+    return res.json(response);
   },
 
   successResponseWithoutData(res, message, code = 1) {
@@ -31,17 +31,10 @@ module.exports = {
     return res.send(response);
   },
 
-  errorResponseWithoutData(
-    res,
-    message,
-    code = 0,
-    status = 200,
-    metaData = {}
-  ) {
+  errorResponseWithoutData(res, message, status = 200, metaData = {}) {
     const response = {
       data: null,
       meta: {
-        code,
         message,
         ...metaData,
       },
@@ -49,12 +42,13 @@ module.exports = {
     return res.status(status).send(response);
   },
 
-  errorResponseData(res, message, code = 400) {
+  errorResponseData(res, message, error, code = 400) {
     const response = {
       code,
       message,
+      error,
     };
-    return res.status(code).send(response);
+    return res.status(code).json(response);
   },
 
   validationErrorResponseData(res, message, code = 400) {
@@ -62,6 +56,6 @@ module.exports = {
       code,
       message,
     };
-    return res.status(code).send(response);
+    return res.status(code).json(response);
   },
 };

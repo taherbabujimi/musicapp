@@ -6,7 +6,10 @@ module.exports = (sequelize, DataTypes) => {
   class Song extends Model {
     static associate(models) {
       this.belongsToMany(models.Genre, { through: "songs_genres" });
-      this.belongsTo(models.User);
+      this.belongsTo(models.User, {
+        foreignKey: { field: "created_by", allowNull: false },
+        as: "User",
+      });
     }
   }
 

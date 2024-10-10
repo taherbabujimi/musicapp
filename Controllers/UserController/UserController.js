@@ -1,85 +1,136 @@
 const Models = require("../../models/index");
+const { Op, Model } = require("sequelize");
+const {
+  validPassword,
+  generateAccessToken,
+} = require("../../services/helpers");
 
-module.exports.getListOfUsers = async (req, res) => {
-  try {
-    const data = await Models.Author.findAndCountAll({
-      offset: 0,
-      limit: 2,
-    });
-    res.send({
-      data,
-    });
-  } catch (e) {
-    console.log(e);
-    res.send({
-      data: null,
-      message: "Something went wrong.",
-    });
-  }
-};
+const {
+  registerUserSchema,
+  userLoginSchema,
+} = require("../../services/validation/userValidation");
 
-module.exports.getUserDataFromId = async (req, res) => {
-  try {
-    const id = parseInt(req.params.id);
-    const data = await Models.User.findOne({
-      where: {
-        id,
-      },
-    });
-    if (!data) {
-      return res.status(404).send({
-        data,
-        message: "User with given id does not exist",
-      });
-    }
-    res.send({
-      data,
-      message: "Success",
-    });
-  } catch (e) {
-    res.send({
-      data: null,
-      message: "Something went wrong.",
-    });
-  }
-};
+const { addSongSchema } = require("../../services/validation/songValidation");
 
-module.exports.deleteUser = async (req, res) => {
-  try {
-    const id = parseInt(req.params.id);
-    await Models.User.destroy({
-      where: {
-        id,
-      },
-    });
-    res.send({
-      message: "User removed successfully.",
-    });
-  } catch (e) {
-    res.send({
-      data: null,
-      message: "Something went wrong.",
-    });
-  }
-};
+const {
+  validationErrorResponseData,
+  successResponseData,
+  errorResponseWithoutData,
+  errorResponseData,
+} = require("../../services/responses");
 
-module.exports.createUser = async (req, res) => {
+const Joi = require("joi");
+
+module.exports.registerUser = async (req, res) => {
   try {
+    const validationResponse = registerUserSchema(req, res);
+    if (validationResponse) return;
+
     const { username, email, password, usertype } = req.body;
-    const data = await Models.User.create({
+
+    if (
+      [username, email, password, usertype].some(
+        (field) => field?.trim() === ""
+      )
+    ) {
+      return validationErrorResponseData(res, "All fields are required", 400);
+    }
+
+    const oldUser = await Models.User.findOne({
+      where: { email: email },
+    });
+
+    if (oldUser) {
+      return validationErrorResponseData(
+        res,
+        "User with this email already exists.",
+        400
+      );
+    }
+
+    const user = await Models.User.create({
       username,
       email,
       password,
       usertype,
     });
-    res.send({
-      data,
-      message: "Success",
-    });
+
+    return successResponseData(res, user, 200, "User created successfully");
   } catch (e) {
-    res.send({
-      data: null,
-      message: `Something went wrong: ${e}`,
-    });
+    errorResponseWithoutData(
+      res,
+      `Something went wrong while creating user: ${e}`,
+      400
+    );
   }
+};
+
+module.exports.userLogin = async (req, res) => {
+  const validationResponse = userLoginSchema(req, res);
+  if (validationResponse) return;
+
+  const { username, password } = req.body;
+
+  if (!password || !username) {
+    return errorResponseWithoutData(res, "Please provide password.", 400);
+  }
+
+  const user = await Models.User.findOne({
+    where: { username: username },
+  });
+
+  if (!user) {
+    return errorResponseWithoutData(res, "User does not exist", 400);
+  }
+
+  const isPasswordValid = await validPassword(password, user);
+
+  if (!isPasswordValid) {
+    return errorResponseWithoutData(
+      res,
+      "Please provide valid credentials.",
+      400
+    );
+  }
+
+  const accessToken = await generateAccessToken(user);
+
+  return successResponseData(
+    res,
+    { user, accessToken },
+    200,
+    "User logged in successfully."
+  );
+};
+
+module.exports.addSong = async (req, res) => {
+  if (req.user.usertype === "user") {
+    return errorResponseWithoutData(res, "Only admins can add songs.", 400);
+  }
+
+  const validationResponse = addSongSchema(req, res);
+
+  if (validationResponse) return;
+
+  const { songname } = req.body;
+
+  if (songname.trim() === "") {
+    return validationErrorResponseData(res, "All fields are required.", 400);
+  }
+
+  const oldSong = await Models.Song.findOne({
+    where: { songname: songname },
+  });
+
+  if (oldSong) {
+    return errorResponseWithoutData(
+      res,
+      "Song with this name already exist.",
+      400
+    );
+  }
+
+  const song = await Models.Song.create({ songname, created_by: req.user.id });
+
+  return successResponseData(res, song, 200, "Song added successfully.");
 };

@@ -19,7 +19,7 @@ module.exports = (sequelize, DataTypes) => {
         primaryKey: true,
       },
       genrename: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.STRING,
         allowNull: false,
         unique: true,
       },
@@ -32,7 +32,7 @@ module.exports = (sequelize, DataTypes) => {
     {
       sequelize,
       modelName: "Genre",
-      tableName: "generes",
+      tableName: "genres",
       timestamps: true,
     }
   );
