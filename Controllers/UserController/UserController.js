@@ -22,31 +22,23 @@ const {
 const Joi = require("joi");
 const { addGenreSchema } = require("../../services/validation/genreValidation");
 
+const { USER_TYPE } = require("../../services/constants");
+
+const { messages } = require("../../services/messages");
+
 module.exports.registerUser = async (req, res) => {
   try {
-    const validationResponse = registerUserSchema(req, res);
+    const validationResponse = registerUserSchema(req.body, res);
     if (validationResponse) return;
 
     const { username, email, password, usertype } = req.body;
-
-    if (
-      [username, email, password, usertype].some(
-        (field) => field?.trim() === ""
-      )
-    ) {
-      return validationErrorResponseData(res, "All fields are required", 400);
-    }
 
     const oldUser = await Models.User.findOne({
       where: { email: email },
     });
 
     if (oldUser) {
-      return validationErrorResponseData(
-        res,
-        "User with this email already exists.",
-        400
-      );
+      return validationErrorResponseData(res, messages.userAlreadyExists, 400);
     }
 
     const user = await Models.User.create({
@@ -56,7 +48,7 @@ module.exports.registerUser = async (req, res) => {
       usertype,
     });
 
-    return successResponseData(res, user, 200, "User created successfully");
+    return successResponseData(res, user, 200, messages.userCreated);
   } catch (e) {
     errorResponseWithoutData(
       res,
@@ -67,54 +59,44 @@ module.exports.registerUser = async (req, res) => {
 };
 
 module.exports.userLogin = async (req, res) => {
-  const validationResponse = userLoginSchema(req, res);
+  const validationResponse = userLoginSchema(req.body, res);
   if (validationResponse) return;
 
   const { email, password } = req.body;
-
-  if (!password || !email) {
-    return errorResponseWithoutData(
-      res,
-      "Please provide email and password.",
-      400
-    );
-  }
 
   const user = await Models.User.findOne({
     where: { email: email },
   });
 
   if (!user) {
-    return errorResponseWithoutData(res, "User does not exist", 400);
+    return errorResponseWithoutData(res, messages.userNotExist, 400);
   }
 
   const isPasswordValid = await validPassword(password, user);
 
   if (!isPasswordValid) {
-    return errorResponseWithoutData(
-      res,
-      "Please provide valid credentials.",
-      400
-    );
+    return errorResponseWithoutData(res, messages.incorrectCredentials, 400);
   }
 
   const accessToken = await generateAccessToken(user);
 
+  const userData = {
+    username: user.username,
+    email: user.email,
+    usertype: user.usertype,
+  };
+
   return successResponseData(
     res,
-    { user },
+    userData,
     200,
-    "User logged in successfully.",
+    messages.userLoginSuccess,
     accessToken
   );
 };
 
 module.exports.addSong = async (req, res) => {
-  if (req.user.usertype === "user") {
-    return errorResponseWithoutData(res, "Only admins can add songs.", 400);
-  }
-
-  const validationResponse = addSongSchema(req, res);
+  const validationResponse = addSongSchema(req.body, res);
 
   if (validationResponse) return;
 
@@ -125,41 +107,26 @@ module.exports.addSong = async (req, res) => {
   });
 
   if (oldSong) {
-    return errorResponseWithoutData(
-      res,
-      "Song with this name already exist.",
-      400
-    );
+    return errorResponseWithoutData(res, messages.songAlreadyExists, 400);
   }
 
   const song = await Models.Song.create({ songname, created_by: req.user.id });
 
-  console.log("Genres:", genres);
-
-  const promises = [];
-
-  for (const genre_id of genres) {
-    const promise = song.addGenre(genre_id); // Pass only the genre_id
-    promises.push(promise);
-  }
+  const promises = genres.map((genre_id) => song.addGenre(genre_id));
 
   Promise.all(promises)
     .then((results) => {
-      console.log("All genres added successfully:", results);
+      console.log(messages.genreAdded, results);
     })
     .catch((err) => {
-      console.log("Error adding genres:", err);
+      console.log(messages.genreErrorAdding, err);
     });
 
-  return successResponseData(res, song, 200, "Song added successfully.");
+  return successResponseData(res, song, 200, messages.songCreated);
 };
 
 module.exports.addGenre = async (req, res) => {
-  if (req.user.usertype === "user") {
-    return errorResponseWithoutData(res, "Only admins can add genre.", 400);
-  }
-
-  const validationResponse = addGenreSchema(req, res);
+  const validationResponse = addGenreSchema(req.body, res);
 
   if (validationResponse) return;
 
@@ -170,11 +137,7 @@ module.exports.addGenre = async (req, res) => {
   });
 
   if (oldGenre) {
-    return errorResponseWithoutData(
-      res,
-      "Genre with this name already exist.",
-      400
-    );
+    return errorResponseWithoutData(res, messages.genreAlreadyExists, 400);
   }
 
   const genre = await Models.Genre.create({
@@ -182,5 +145,5 @@ module.exports.addGenre = async (req, res) => {
     created_by: req.user.id,
   });
 
-  return successResponseData(res, genre, 200, "Genre created successfully.");
+  return successResponseData(res, genre, 200, messages.genreCreated);
 };
