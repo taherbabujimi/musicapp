@@ -6,6 +6,7 @@ const {
   errorResponseData,
 } = require("../services/responses");
 const Models = require("../models/index");
+const { messages } = require("../services/messages");
 
 module.exports = {
   async verifyJWT(req, res, next) {
@@ -13,7 +14,7 @@ module.exports = {
       const token = req.header("Authorization");
 
       if (!token) {
-        return errorResponseWithoutData(res, "Unauthorized request", 400);
+        return errorResponseWithoutData(res, messages.badRequest, 400);
       }
 
       const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
@@ -21,14 +22,14 @@ module.exports = {
       const user = await Models.User.findByPk(decodedToken.id);
 
       if (!user) {
-        return errorResponseWithoutData(res, "Invalid access token", 400);
+        return errorResponseWithoutData(res, messages.invalidToken, 400);
       }
 
       req.user = user;
 
       next();
     } catch (error) {
-      return errorResponseData(res, "Invalid access token", error);
+      return errorResponseData(res, messages.invalidToken, error);
     }
   },
 };

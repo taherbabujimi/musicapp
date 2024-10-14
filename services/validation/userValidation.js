@@ -3,6 +3,7 @@
 const Joi = require("joi");
 const { errorResponseData } = require("../responses");
 const { USER_TYPE } = require("../constants");
+const { messages } = require("../messages");
 const USERTYPE = Object.values(USER_TYPE);
 
 module.exports = {
@@ -36,7 +37,7 @@ module.exports = {
     if (validationResult.error) {
       return errorResponseData(
         res,
-        "Error while validating values.",
+        messages.errorValidatingValues,
         validationResult.error.details
       );
     }

@@ -1,32 +1,22 @@
 "use strict";
 
-const { USER_TYPE } = require("../services/constants");
-const USERTYPE = Object.values(USER_TYPE);
+const { allow } = require("joi");
 
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable("users", {
+    await queryInterface.createTable("playlists", {
       id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
       },
-      username: {
+      playlistname: {
         type: Sequelize.STRING,
         allowNull: false,
       },
-      email: {
-        type: Sequelize.STRING,
-        allowNull: false,
-        unique: true,
-      },
-      password: {
-        type: Sequelize.STRING,
-        allowNull: false,
-      },
-      usertype: {
-        type: Sequelize.ENUM(USERTYPE),
+      created_by: {
+        type: Sequelize.INTEGER,
         allowNull: false,
       },
       createdAt: {
@@ -37,13 +27,10 @@ module.exports = {
         type: Sequelize.DATE,
         allowNull: false,
       },
-      user_genre_preference: {
-        type: Sequelize.JSON,
-      },
     });
   },
 
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable("users");
+    await queryInterface.dropTable("playlists");
   },
 };

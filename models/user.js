@@ -8,8 +8,9 @@ const jwt = require("jsonwebtoken");
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
     static associate(models) {
-      this.hasMany(models.Song);
-      this.hasMany(models.Genre);
+      this.hasMany(models.Song, { foreignKey: { field: "created_by" } });
+      this.hasMany(models.Genre, { foreignKey: { field: "created_by" } });
+      this.hasMany(models.Playlist, { foreignKey: { field: "created_by" } });
     }
   }
   User.init(
@@ -36,6 +37,9 @@ module.exports = (sequelize, DataTypes) => {
       usertype: {
         type: DataTypes.ENUM(USERTYPE),
         allowNull: false,
+      },
+      user_genre_preference: {
+        type: DataTypes.JSON,
       },
     },
     {

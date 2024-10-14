@@ -3,25 +3,20 @@
 const { Model } = require("sequelize");
 
 module.exports = (sequelize, DataTypes) => {
-  class Song extends Model {
+  class Playlist extends Model {
     static associate(models) {
-      this.belongsToMany(models.Genre, {
-        through: "songs_genres",
-        foreignKey: "song_id",
-        otherKey: "genre_id",
-      });
-      this.belongsToMany(models.Playlist, {
+      this.belongsToMany(models.Song, {
         through: "songs_playlists",
-        foreignKey: "song_id",
-        otherKey: "playlist_id",
+        foreignKey: "playlist_id",
+        otherKey: "song_id",
       });
-      Song.belongsTo(models.User, {
-        foreignKey: { field: "created_by" },
+      this.belongsTo(models.User, {
+        foreignKey: { field: "created_By" },
       });
     }
   }
 
-  Song.init(
+  Playlist.init(
     {
       id: {
         type: DataTypes.INTEGER,
@@ -29,10 +24,9 @@ module.exports = (sequelize, DataTypes) => {
         autoIncrement: true,
         primaryKey: true,
       },
-      songname: {
+      playlistname: {
         type: DataTypes.STRING,
         allowNull: false,
-        unique: true,
       },
       created_by: {
         type: DataTypes.INTEGER,
@@ -42,10 +36,10 @@ module.exports = (sequelize, DataTypes) => {
     },
     {
       sequelize,
-      modelName: "Song",
-      tableName: "songs",
+      modelName: "Playlist",
+      tableName: "playlists",
       timestamps: true,
     }
   );
-  return Song;
+  return Playlist;
 };

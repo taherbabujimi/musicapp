@@ -1,6 +1,6 @@
 "use strict";
 
-const { Model, BelongsTo } = require("sequelize");
+const { Model } = require("sequelize");
 
 module.exports = (sequelize, DataTypes) => {
   class Genre extends Model {

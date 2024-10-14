@@ -2,6 +2,7 @@
 
 const Joi = require("joi");
 const { errorResponseData } = require("../responses");
+const { messages } = require("../messages");
 
 module.exports = {
   addGenreSchema(body, res) {
@@ -14,7 +15,7 @@ module.exports = {
     if (validationResult.error) {
       return errorResponseData(
         res,
-        "Error while validating values.",
+        messages.errorValidatingValues,
         validationResult.error.details
       );
     }
