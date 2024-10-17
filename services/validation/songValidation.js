@@ -8,7 +8,7 @@ module.exports = {
   addSongSchema(body, res) {
     const Schema = Joi.object({
       songname: Joi.string().min(3).max(30).required(),
-      genres: Joi.array().items(Joi.number()).required(),
+      genres: Joi.array().min(1).items(Joi.number().required()).required(),
     });
 
     const validationResult = Schema.validate(body);
@@ -19,6 +19,8 @@ module.exports = {
         messages.errorValidatingValues,
         validationResult.error.details
       );
+    } else {
+      return false;
     }
   },
 };

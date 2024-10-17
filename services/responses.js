@@ -1,13 +1,12 @@
 "use strict";
 
 module.exports = {
-  successResponseData(res, data, code = 1, message, token, extras) {
+  successResponseData(res, data, code = 1, message, extras) {
     const response = {
       data,
       meta: {
         code,
         message,
-        token,
       },
     };
     if (extras) {

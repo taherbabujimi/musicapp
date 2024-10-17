@@ -14,6 +14,8 @@ module.exports = {
 
     if (validationResult.error) {
       return errorResponseData(res, messages.errorValidatingValues, 400);
+    } else {
+      return false;
     }
   },
 };

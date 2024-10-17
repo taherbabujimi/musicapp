@@ -19,6 +19,8 @@ module.exports = {
         messages.errorValidatingValues,
         validationResult.error.details
       );
+    } else {
+      return false;
     }
   },
 };

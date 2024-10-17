@@ -23,6 +23,8 @@ module.exports = {
         "Error while validating values",
         validationResult.error.details
       );
+    } else {
+      return false;
     }
   },
 
@@ -40,6 +42,8 @@ module.exports = {
         messages.errorValidatingValues,
         validationResult.error.details
       );
+    } else {
+      return false;
     }
   },
 };

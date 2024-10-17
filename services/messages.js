@@ -31,5 +31,9 @@ module.exports = {
     songRemoveFromPlaylist: "Song removed from playlist successfully.",
     somethingWentWrong: "Something went wrong",
     recommendedSongFetch: "Recommended songs fetched successfully.",
+    previousGenrePreferenceNotFound:
+      "User does not have previous genre preferences yet.",
+    previousGenrePreferenceFetched:
+      "User's previous genre preferences fetched successfully.",
   },
 };
