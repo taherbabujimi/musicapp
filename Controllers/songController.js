@@ -64,11 +64,11 @@ module.exports.getSong = async (req, res) => {
       include: [{ model: Models.Genre, through: { attributes: [] } }],
     });
 
-    const genreIds = song.dataValues.Genres.map((genre) => genre.id);
-
     if (!song) {
       return errorResponseWithoutData(res, messages.songNotExists, 400);
     }
+
+    const genreIds = song.dataValues.Genres.map((genre) => genre.id);
 
     let songData = {
       id: song.id,

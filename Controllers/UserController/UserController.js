@@ -21,7 +21,7 @@ module.exports.registerUser = async (req, res) => {
     const validationResponse = registerUserSchema(req.body, res);
     if (validationResponse !== false) return;
 
-    let { username, password, usertype } = req.body;
+    let { username, password } = req.body;
     username = username.replace(/ +/g, "");
 
     const email = req.body.email.toLowerCase();
@@ -38,7 +38,6 @@ module.exports.registerUser = async (req, res) => {
       username,
       email,
       password,
-      usertype,
     });
 
     return successResponseData(res, user, 200, messages.userCreated);
@@ -85,6 +84,40 @@ module.exports.userLogin = async (req, res) => {
     return successResponseData(res, userData, 200, messages.userLoginSuccess, {
       token: accessToken,
     });
+  } catch (error) {
+    return errorResponseWithoutData(
+      res,
+      `${messages.somethingWentWrong}: ${error}`,
+      400
+    );
+  }
+};
+
+module.exports.addAdmin = async (req, res) => {
+  try {
+    const { password, role_id } = req.body;
+
+    const username = req.body.username.replace(/ +/g, "");
+
+    const email = req.body.email.toLowerCase();
+
+    const oldAdmin = await Models.User.findOne({
+      where: { email: email },
+    });
+
+    if (oldAdmin) {
+      return validationErrorResponseData(res, messages.adminAlreadyExists, 400);
+    }
+
+    const admin = await Models.User.create({
+      username,
+      email,
+      password,
+      usertype: "admin",
+      role_id,
+    });
+
+    return successResponseData(res, admin, 200, messages.adminCreatedSuccess);
   } catch (error) {
     return errorResponseWithoutData(
       res,

@@ -4,15 +4,22 @@ const {
 } = require("../Controllers/genreController");
 
 const { verifyJWT } = require("../Middlewares/authMiddleware");
-const { verifyAdminUsertype } = require("../Middlewares/verifyAdminUsertype");
+const {
+  verifyUsertypeAndPermission,
+} = require("../Middlewares/verifyUsertypeAndPermission");
 
 const genreRoute = require("express").Router();
 
-genreRoute.post("/addGenre", verifyJWT, verifyAdminUsertype, addGenre);
+genreRoute.post(
+  "/addGenre",
+  verifyJWT,
+  verifyUsertypeAndPermission(["admin"], ["add_genre"]),
+  addGenre
+);
 genreRoute.get(
   "/getUserMusicGenre",
   verifyJWT,
-  verifyAdminUsertype,
+  verifyUsertypeAndPermission(["admin"]),
   getUserMusicGenre
 );
 

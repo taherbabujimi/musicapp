@@ -27,6 +27,7 @@ module.exports = {
       },
       usertype: {
         type: Sequelize.ENUM(USERTYPE),
+        defaultValue: "user",
         allowNull: false,
       },
       createdAt: {
@@ -39,6 +40,9 @@ module.exports = {
       },
       user_genre_preference: {
         type: Sequelize.JSON,
+      },
+      role_id: {
+        type: Sequelize.INTEGER,
       },
     });
   },

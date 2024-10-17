@@ -16,7 +16,7 @@ module.exports = {
           username: "Taher Babuji",
           email: "taher@gmail.com",
           password: hashedPassword,
-          usertype: "admin",
+          usertype: "superAdmin",
           createdAt: new Date(),
           updatedAt: new Date(),
         },

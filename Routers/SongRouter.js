@@ -5,18 +5,34 @@ const {
   getRecommendedSongs,
 } = require("../Controllers/songController");
 const { verifyJWT } = require("../Middlewares/authMiddleware");
-const { verifyUserUsertype } = require("../Middlewares/verifyUserUsertype");
-const { verifyAdminUsertype } = require("../Middlewares/verifyAdminUsertype");
+const {
+  verifyUsertypeAndPermission,
+} = require("../Middlewares/verifyUsertypeAndPermission");
 
 const songRoute = require("express").Router();
 
-songRoute.post("/addSong", verifyJWT, verifyAdminUsertype, addSong);
-songRoute.get("/getSong", verifyJWT, verifyUserUsertype, getSong);
-songRoute.get("/getSongsByGenre", verifyJWT, verifyUserUsertype, searchSongs);
+songRoute.post(
+  "/addSong",
+  verifyJWT,
+  verifyUsertypeAndPermission(["admin"], ["add_song"]),
+  addSong
+);
+songRoute.get(
+  "/getSong",
+  verifyJWT,
+  verifyUsertypeAndPermission(["user"]),
+  getSong
+);
+songRoute.get(
+  "/getSongsByGenre",
+  verifyJWT,
+  verifyUsertypeAndPermission(["user"]),
+  searchSongs
+);
 songRoute.get(
   "/getRecommendedSongs",
   verifyJWT,
-  verifyUserUsertype,
+  verifyUsertypeAndPermission(["user"]),
   getRecommendedSongs
 );
 

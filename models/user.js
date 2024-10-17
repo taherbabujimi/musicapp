@@ -36,10 +36,15 @@ module.exports = (sequelize, DataTypes) => {
       },
       usertype: {
         type: DataTypes.ENUM(USERTYPE),
+        defaultValue: "user",
         allowNull: false,
       },
       user_genre_preference: {
         type: DataTypes.JSON,
+      },
+      role_id: {
+        type: DataTypes.INTEGER,
+        references: { model: "roles", key: "id" },
       },
     },
     {

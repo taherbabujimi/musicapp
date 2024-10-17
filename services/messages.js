@@ -21,8 +21,6 @@ module.exports = {
     errorValidatingValues: "Error while validating values.",
     badRequest: "Unauthorized request",
     invalidToken: "Invalid access token",
-    adminAccess: "Only admins can access this.",
-    userAccess: "Only users can access this.",
     playlistAlreadyExists: "Playlist with this name already exists.",
     playlistCreated: "Playlist created successfully.",
     playlistNotExists: "Playlist with this name does not exists.",
@@ -35,5 +33,10 @@ module.exports = {
       "User does not have previous genre preferences yet.",
     previousGenrePreferenceFetched:
       "User's previous genre preferences fetched successfully.",
+    notAuthorized: "Not Authorized",
+    roleAlreadyExists: "Role with this name already exists.",
+    roleAddedSucces: "Role added successfully.",
+    adminAlreadyExists: "Admin already exists",
+    adminCreatedSuccess: "Admin created successfully.",
   },
 };

@@ -5,28 +5,30 @@ const {
 } = require("../Controllers/playlistController");
 
 const { verifyJWT } = require("../Middlewares/authMiddleware");
-const { verifyUserUsertype } = require("../Middlewares/verifyUserUsertype");
+const {
+  verifyUsertypeAndPermission,
+} = require("../Middlewares/verifyUsertypeAndPermission");
 
 const playlistRoute = require("express").Router();
 
 playlistRoute.post(
   "/createPlaylist",
   verifyJWT,
-  verifyUserUsertype,
+  verifyUsertypeAndPermission(["user"]),
   createPlaylist
 );
 
 playlistRoute.post(
   "/addSongToPlaylist",
   verifyJWT,
-  verifyUserUsertype,
+  verifyUsertypeAndPermission(["user"]),
   addSongsToPlaylist
 );
 
 playlistRoute.delete(
   "/removeSongFromPlaylist",
   verifyJWT,
-  verifyUserUsertype,
+  verifyUsertypeAndPermission(["user"]),
   removeSongsFromPlaylist
 );
 
