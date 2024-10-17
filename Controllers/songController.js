@@ -89,30 +89,6 @@ module.exports.getSong = async (req, res) => {
       user.user_genre_preference = { json: [] };
     }
 
-    // console.log(user.user_genre_preference.json[0].count);
-
-    // const update = await user.update(
-    //   {
-    //     user_genre_preference: Models.Sequelize.fn(
-    //       "JSON_SET",
-    //       Models.Sequelize.col("user_genre_preference"),
-    //       "$.json[2].count", // Adjust this path according to your JSON structure
-    //       Models.Sequelize.fn(
-    //         "CAST",
-    //         Models.Sequelize.fn(
-    //           "JSON_EXTRACT",
-    //           Models.Sequelize.col("user_genre_preference"),
-    //           "$.json[2].count"
-    //         )
-    //       ) + 1 // Increment logic
-    //     ),
-    //   },
-    //   {
-    //     where: { genre_id: { [Op.in]: genreIds } },
-    //   },
-    //   { transaction: t }
-    // );
-
     // Update genre preferences
     for (let i = 0; i < genreIds.length; i++) {
       const genreId = genreIds[i];
