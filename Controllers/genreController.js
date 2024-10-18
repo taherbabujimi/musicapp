@@ -3,6 +3,9 @@ const Models = require("../models/index");
 const { messages } = require("../services/messages");
 const { addGenreSchema } = require("../services/validation/genreValidation");
 const {
+  getUserMusicGenreSchema,
+} = require("../services/validation/getUserMusicGenreValidation");
+const {
   errorResponseWithoutData,
   successResponseData,
   successResponseWithoutData,
@@ -16,7 +19,7 @@ module.exports.addGenre = async (req, res) => {
 
     if (validationResponse !== false) return;
 
-    const { genrename } = req.body;
+    const genrename = req.body.genrename.replace(/ +/g, "");
 
     const oldGenre = await Models.Genre.findOne({
       where: { genrename: genrename },
@@ -43,11 +46,14 @@ module.exports.addGenre = async (req, res) => {
 
 module.exports.getUserMusicGenre = async (req, res) => {
   try {
-    const { user_id } = req.body;
+    const validationResponse = getUserMusicGenreSchema(req.body, res);
+    if (validationResponse !== false) return;
 
-    if (user_id.trim() === "") {
-      return errorResponseWithoutData(res, messages.incorrectCredentials, 400);
-    }
+    const { user_id } = req.body;
+    const { page, pageSize } = req.query;
+
+    const offset = (parseInt(page) - 1) * parseInt(pageSize) || 0;
+    const limit = parseInt(pageSize || 8);
 
     const user = await Models.User.findOne({
       where: { id: user_id },
@@ -79,6 +85,8 @@ module.exports.getUserMusicGenre = async (req, res) => {
 
     const genres = await Models.Genre.findAll({
       where: { id: { [Op.in]: genreIds } },
+      offset,
+      limit,
     });
 
     let genreWithPercentage = [];

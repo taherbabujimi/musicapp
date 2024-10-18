@@ -7,13 +7,18 @@ const { messages } = require("../messages");
 module.exports = {
   getSongSchema(body, res) {
     const Schema = Joi.object({
-      songname: Joi.string().min(3).max(30).required(),
+      song_id: Joi.number().required(),
     });
 
     const validationResult = Schema.validate(body);
 
     if (validationResult.error) {
-      return errorResponseData(res, messages.errorValidatingValues, 400);
+      return errorResponseData(
+        res,
+        messages.errorValidatingValues,
+        validationResult.error.details,
+        400
+      );
     } else {
       return false;
     }

@@ -27,6 +27,7 @@ module.exports = (sequelize, DataTypes) => {
       playlistname: {
         type: DataTypes.STRING,
         allowNull: false,
+        unique: true,
       },
       created_by: {
         type: DataTypes.INTEGER,

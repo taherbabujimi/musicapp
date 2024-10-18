@@ -12,7 +12,6 @@ module.exports = {
       songname: {
         type: Sequelize.STRING,
         allowNull: false,
-        unique: true,
       },
       created_by: {
         type: Sequelize.INTEGER,

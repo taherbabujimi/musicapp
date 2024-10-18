@@ -1,13 +1,11 @@
 "use strict";
-
 const Joi = require("joi");
 const { errorResponseData } = require("../responses");
 const { messages } = require("../messages");
 
 module.exports = {
-  addSongToPlaylistSchema(body, res) {
+  deletePlaylistSchema(body, res) {
     const Schema = Joi.object({
-      song_id: Joi.number().required(),
       playlist_id: Joi.number().required(),
     });
 
@@ -17,7 +15,8 @@ module.exports = {
       return errorResponseData(
         res,
         messages.errorValidatingValues,
-        validationResult.error.details
+        validationResult.error.details,
+        400
       );
     } else {
       return false;

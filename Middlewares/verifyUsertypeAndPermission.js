@@ -27,7 +27,7 @@ module.exports.verifyUsertypeAndPermission = (
           (permission) => permission.dataValues.permission
         );
 
-        const hasPermission = allowedPermission.some((perm) =>
+        const hasPermission = allowedPermission.every((perm) =>
           permissions.includes(perm)
         );
 

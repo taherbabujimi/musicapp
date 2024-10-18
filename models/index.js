@@ -32,6 +32,8 @@ if (!process.sequelize) {
   }
 }
 
+sequelize = process.sequelize;
+
 fs.readdirSync(__dirname)
   .filter((file) => {
     return (

@@ -5,10 +5,9 @@ const { errorResponseData } = require("../responses");
 const { messages } = require("../messages");
 
 module.exports = {
-  addSongToPlaylistSchema(body, res) {
+  getUserMusicGenreSchema(body, res) {
     const Schema = Joi.object({
-      song_id: Joi.number().required(),
-      playlist_id: Joi.number().required(),
+      user_id: Joi.number().required(),
     });
 
     const validationResult = Schema.validate(body);
@@ -17,7 +16,8 @@ module.exports = {
       return errorResponseData(
         res,
         messages.errorValidatingValues,
-        validationResult.error.details
+        validationResult.error.details,
+        400
       );
     } else {
       return false;

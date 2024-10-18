@@ -1,4 +1,6 @@
 const Models = require("../models/index");
+const { sequelize } = require("../models/index");
+const { Op } = require("sequelize");
 
 const { messages } = require("../services/messages");
 const {
@@ -8,9 +10,13 @@ const {
   addSongToPlaylistSchema,
 } = require("../services/validation/addSongsToPlaylistValidation");
 const {
+  deletePlaylistSchema,
+} = require("../services/validation/deletePlaylistValidation");
+const {
   errorResponseWithoutData,
   successResponseData,
   successResponseWithoutData,
+  errorResponseData,
 } = require("../services/responses");
 
 module.exports.createPlaylist = async (req, res) => {
@@ -49,10 +55,10 @@ module.exports.addSongsToPlaylist = async (req, res) => {
 
     if (validationResult !== false) return;
 
-    const { songname, playlistname } = req.body;
+    const { song_id, playlist_id } = req.body;
 
     const song = await Models.Song.findOne({
-      where: { songname: songname },
+      where: { id: song_id },
     });
 
     if (!song) {
@@ -60,7 +66,7 @@ module.exports.addSongsToPlaylist = async (req, res) => {
     }
 
     const playlist = await Models.Playlist.findOne({
-      where: { playlistname: playlistname, created_by: req.user.id },
+      where: { id: playlist_id, created_by: req.user.id },
     });
 
     if (!playlist) {
@@ -89,10 +95,10 @@ module.exports.removeSongsFromPlaylist = async (req, res) => {
     const validationResult = addSongToPlaylistSchema(req.body, res);
     if (validationResult !== false) return;
 
-    const { songname, playlistname } = req.body;
+    const { song_id, playlist_id } = req.body;
 
     const song = await Models.Song.findOne({
-      where: { songname: songname },
+      where: { id: song_id },
     });
 
     if (!song) {
@@ -100,7 +106,7 @@ module.exports.removeSongsFromPlaylist = async (req, res) => {
     }
 
     const playlist = await Models.Playlist.findOne({
-      where: { playlistname: playlistname, created_by: req.user.id },
+      where: { id: playlist_id, created_by: req.user.id },
     });
 
     if (!playlist) {
@@ -115,6 +121,58 @@ module.exports.removeSongsFromPlaylist = async (req, res) => {
       200
     );
   } catch (error) {
+    return errorResponseWithoutData(
+      res,
+      `${messages.somethingWentWrong}: ${error}`,
+      400
+    );
+  }
+};
+
+module.exports.deletePlaylist = async (req, res) => {
+  const transaction = await sequelize.transaction();
+  try {
+    const validationResult = deletePlaylistSchema(req.body, res);
+    if (validationResult !== false) return;
+
+    const { playlist_id } = req.body;
+
+    const playlist = await Models.Playlist.findOne(
+      {
+        where: { id: playlist_id, created_by: req.user.id },
+        include: [{ model: Models.Song, through: { attributes: [] } }],
+      },
+      { transaction }
+    );
+
+    if (!playlist) {
+      return errorResponseWithoutData(res, messages.playlistNotExists, 400);
+    }
+
+    const songs = playlist.dataValues.Songs.map((song) => song.id);
+
+    await playlist.destroy({ transaction });
+
+    const promises = songs.map((song_id) =>
+      playlist.removeSong(song_id, { transaction })
+    );
+
+    Promise.all(promises)
+      .then(async (result) => {
+        await transaction.commit();
+        return successResponseWithoutData(res, messages.playlistDeleted, 200);
+      })
+      .catch(async (error) => {
+        await transaction.rollback();
+        return errorResponseData(
+          res,
+          messages.errorDeletingPlaylist,
+          error,
+          400
+        );
+      });
+  } catch (error) {
+    await transaction.rollback();
     return errorResponseWithoutData(
       res,
       `${messages.somethingWentWrong}: ${error}`,

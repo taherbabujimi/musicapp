@@ -18,14 +18,6 @@ module.exports.addSong = async (req, res) => {
 
     const { songname, genres } = req.body;
 
-    const oldSong = await Models.Song.findOne({
-      where: { songname: songname },
-    });
-
-    if (oldSong) {
-      return errorResponseWithoutData(res, messages.songAlreadyExists, 400);
-    }
-
     const song = await Models.Song.create({
       songname,
       created_by: req.user.id,
@@ -57,10 +49,10 @@ module.exports.getSong = async (req, res) => {
 
     if (validationResult !== false) return;
 
-    const { songname } = req.body;
+    const { song_id } = req.body;
 
     const song = await Models.Song.findOne({
-      where: { songname: songname },
+      where: { id: song_id },
       include: [{ model: Models.Genre, through: { attributes: [] } }],
     });
 
@@ -84,12 +76,10 @@ module.exports.getSong = async (req, res) => {
       where: { id: req.user.id },
     });
 
-    // Initialize user_genre_preference if it doesn't exist
     if (user.user_genre_preference === null) {
       user.user_genre_preference = { json: [] };
     }
 
-    // Update genre preferences
     for (let i = 0; i < genreIds.length; i++) {
       const genreId = genreIds[i];
       const existingGenre = user.user_genre_preference.json.find(
@@ -97,10 +87,8 @@ module.exports.getSong = async (req, res) => {
       );
 
       if (existingGenre) {
-        // Increment count if genre_id already
         existingGenre.count += 1;
       } else if (!existingGenre) {
-        // Add new entry if genre_id does not exist
         user.user_genre_preference.json.push({
           genre_id: genreId,
           count: 1,
@@ -124,20 +112,39 @@ module.exports.searchSongs = async (req, res) => {
     const validationResult = addGenreSchema(req.body, res);
     if (validationResult !== false) return;
 
+    const { page, pageSize } = req.query;
+
+    const offset = (parseInt(page) - 1) * parseInt(pageSize) || 0;
+    const limit = parseInt(pageSize || 8);
+
     const { genrename } = req.body;
 
-    const songsAsPerGenre = await Models.Genre.findOne({
-      where: { genrename: genrename },
-      include: { model: Models.Song },
+    const songsAsPerGenre = await Models.Song.findAll({
+      include: [
+        {
+          model: Models.Genre,
+          where: { genrename },
+        },
+      ],
+      offset,
+      limit,
     });
 
     if (!songsAsPerGenre) {
       return errorResponseWithoutData(res, messages.songNotFetched, 400);
     }
 
+    const songsWithoutGenres = songsAsPerGenre.map((song) => ({
+      id: song.dataValues.id,
+      songname: song.dataValues.songname,
+      created_by: song.dataValues.created_by,
+      createdAt: song.dataValues.createdAt,
+      updatedAt: song.dataValues.updatedAt,
+    }));
+
     return successResponseData(
       res,
-      songsAsPerGenre,
+      songsWithoutGenres,
       200,
       messages.songFetchSuccessAsGenre
     );
@@ -186,13 +193,11 @@ module.exports.getRecommendedSongs = async (req, res) => {
 
     let bestGenres = [];
 
-    if (jsonData.length >= 3) {
-      bestGenres = [
-        jsonData[0].genre_id,
-        jsonData[1].genre_id,
-        jsonData[2].genre_id,
-      ];
-    } else {
+    if (jsonData.length >= process.env.TOP_GENRE_COUNT) {
+      for (let i = 0; i < process.env.TOP_GENRE_COUNT; i++) {
+        bestGenres.push(jsonData[i].genre_id);
+      }
+    } else if (jsonData.length < process.env.TOP_GENRE_COUNT) {
       for (let i = 0; i < jsonData.length; i++) {
         bestGenres.push(jsonData[i].genre_id);
       }
