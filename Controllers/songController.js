@@ -10,17 +10,23 @@ const {
   successResponseData,
 } = require("../services/responses");
 
+const { createReadStream } = require("fs");
+const { client } = require("../config/redis");
+
 module.exports.addSong = async (req, res) => {
   try {
     const validationResponse = addSongSchema(req.body, res);
 
     if (validationResponse !== false) return;
 
+    await client.flushAll();
+
     const { songname, genres } = req.body;
 
     const song = await Models.Song.create({
       songname,
       created_by: req.user.id,
+      path: req.file.path,
     });
 
     const promises = genres.map((genre_id) => song.addGenre(genre_id));
@@ -51,6 +57,17 @@ module.exports.getSong = async (req, res) => {
 
     const { song_id } = req.body;
 
+    const data = await client.get(song_id);
+
+    if (data !== null) {
+      return successResponseData(
+        res,
+        JSON.parse(data),
+        200,
+        `${messages.songFetchSuccess}, from cache`
+      );
+    }
+
     const song = await Models.Song.findOne({
       where: { id: song_id },
       include: [{ model: Models.Genre, through: { attributes: [] } }],
@@ -70,7 +87,15 @@ module.exports.getSong = async (req, res) => {
       updatedAt: song.updatedAt,
     };
 
-    successResponseData(res, songData, 200, messages.songFetchSuccess);
+    const songPath = song.path;
+
+    let readStream = createReadStream(songPath);
+    readStream.pipe(res);
+
+    await client.set(song_id, JSON.stringify(songData));
+    await client.expire(song_id, 10);
+
+    // successResponseData(res, songData, 200, messages.songFetchSuccess);
 
     const user = await Models.User.findOne({
       where: { id: req.user.id },

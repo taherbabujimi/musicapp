@@ -10,8 +10,17 @@ const {
 } = require("../Middlewares/verifyUsertypeAndPermission");
 const { USER_TYPE, PERMISSION } = require("../services/constants");
 
+//For multer
 const multer = require("multer");
-const upload = multer({ dest: "uploads/" });
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/");
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.originalname);
+  },
+});
+const upload = multer({ storage: storage });
 
 const songRoute = require("express").Router();
 
