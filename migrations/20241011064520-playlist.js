@@ -1,6 +1,7 @@
 "use strict";
 
-const { allow } = require("joi");
+const { PLAYLIST_TYPE } = require("../services/constants");
+const PLAYLISTTYPE = Object.values(PLAYLIST_TYPE);
 
 module.exports = {
   async up(queryInterface, Sequelize) {
@@ -14,10 +15,14 @@ module.exports = {
       playlistname: {
         type: Sequelize.STRING,
         allowNull: false,
-        unique: true,
       },
       created_by: {
         type: Sequelize.INTEGER,
+        allowNull: false,
+      },
+      playlist_type: {
+        type: Sequelize.ENUM(PLAYLISTTYPE),
+        defaultValue: PLAYLIST_TYPE.PUBLIC,
         allowNull: false,
       },
       createdAt: {

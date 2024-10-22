@@ -76,6 +76,7 @@ module.exports.userLogin = async (req, res) => {
     const accessToken = await generateAccessToken(user);
 
     const userData = {
+      id: user.id,
       username: user.username,
       email: user.email,
       usertype: user.usertype,

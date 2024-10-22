@@ -1,6 +1,8 @@
 "use strict";
 
 const { Model } = require("sequelize");
+const { PLAYLIST_TYPE } = require("../services/constants");
+const PLAYLISTTYPE = Object.values(PLAYLIST_TYPE);
 
 module.exports = (sequelize, DataTypes) => {
   class Playlist extends Model {
@@ -27,11 +29,15 @@ module.exports = (sequelize, DataTypes) => {
       playlistname: {
         type: DataTypes.STRING,
         allowNull: false,
-        unique: true,
       },
       created_by: {
         type: DataTypes.INTEGER,
         references: { model: "users", key: "id" },
+        allowNull: false,
+      },
+      playlist_type: {
+        type: DataTypes.ENUM(PLAYLISTTYPE),
+        defaultValue: PLAYLIST_TYPE.PUBLIC,
         allowNull: false,
       },
     },

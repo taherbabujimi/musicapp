@@ -10,7 +10,7 @@ const {
   addSongToPlaylistSchema,
 } = require("../services/validation/addSongsToPlaylistValidation");
 const {
-  deletePlaylistSchema,
+  playlistIdSchema,
 } = require("../services/validation/deletePlaylistValidation");
 const {
   errorResponseWithoutData,
@@ -18,13 +18,14 @@ const {
   successResponseWithoutData,
   errorResponseData,
 } = require("../services/responses");
+const { PLAYLIST_TYPE } = require("../services/constants");
 
 module.exports.createPlaylist = async (req, res) => {
   try {
     const validationResult = addPlaylistSchema(req.body, res);
     if (validationResult !== false) return;
 
-    const { playlistname } = req.body;
+    const { playlistname, playlist_type } = req.body;
 
     const oldPlaylist = await Models.Playlist.findOne({
       where: { playlistname: playlistname, created_by: req.user.id },
@@ -35,7 +36,8 @@ module.exports.createPlaylist = async (req, res) => {
     }
 
     const playlist = await Models.Playlist.create({
-      playlistname: playlistname,
+      playlistname,
+      playlist_type,
       created_by: req.user.id,
     });
 
@@ -132,7 +134,7 @@ module.exports.removeSongsFromPlaylist = async (req, res) => {
 module.exports.deletePlaylist = async (req, res) => {
   const transaction = await sequelize.transaction();
   try {
-    const validationResult = deletePlaylistSchema(req.body, res);
+    const validationResult = playlistIdSchema(req.body, res);
     if (validationResult !== false) return;
 
     const { playlist_id } = req.body;
@@ -173,6 +175,158 @@ module.exports.deletePlaylist = async (req, res) => {
       });
   } catch (error) {
     await transaction.rollback();
+    return errorResponseWithoutData(
+      res,
+      `${messages.somethingWentWrong}: ${error}`,
+      400
+    );
+  }
+};
+
+module.exports.getPlaylist = async (req, res) => {
+  try {
+    const validationResult = playlistIdSchema(req.body, res);
+    if (validationResult !== false) return;
+
+    const { pageSize, page } = req.query;
+
+    const offset = (parseInt(page) - 1) * parseInt(pageSize) || 0;
+    const limit = parseInt(pageSize || 10);
+
+    const { playlist_id } = req.body;
+
+    const { count, rows } = await Models.Song.findAndCountAll({
+      include: [{ model: Models.Playlist, where: { id: playlist_id } }],
+      limit,
+      offset,
+    });
+
+    const songs = rows;
+
+    const playlist = songs.map((song) => ({
+      id: song.dataValues.Playlists[0].id,
+      playlistname: song.dataValues.Playlists[0].playlistname,
+      playlist_type: song.dataValues.Playlists[0].playlist_type,
+      created_by: song.dataValues.Playlists[0].created_by,
+      createdAt: song.dataValues.Playlists[0].createdAt,
+      updatedAt: song.dataValues.Playlists[0].updatedAt,
+    }));
+
+    if (playlist.length === 0) {
+      return errorResponseWithoutData(res, messages.playlistNotExists, 400);
+    }
+
+    if (
+      playlist[0].playlist_type === PLAYLIST_TYPE.PRIVATE &&
+      playlist[0].created_by !== req.user.id
+    ) {
+      return errorResponseWithoutData(
+        res,
+        messages.playlistAccessNotAllowed,
+        400
+      );
+    }
+
+    const songsWithoutPlaylist = songs.map((song) => ({
+      id: song.dataValues.id,
+      songname: song.dataValues.songname,
+      created_by: song.dataValues.created_by,
+      createdAt: song.dataValues.createdAt,
+      updatedAt: song.dataValues.updatedAt,
+    }));
+
+    return successResponseData(
+      res,
+      songsWithoutPlaylist,
+      200,
+      messages.playlistFetchSuccess,
+      {
+        page: parseInt(page) || 1,
+        pageSize: parseInt(pageSize) || 10,
+        totalDataCount: count,
+      }
+    );
+  } catch (error) {
+    return errorResponseWithoutData(
+      res,
+      `${messages.somethingWentWrong}: ${error}`,
+      400
+    );
+  }
+};
+
+module.exports.likePlaylist = async (req, res) => {
+  try {
+    const validationResult = playlistIdSchema(req.body, res);
+    if (validationResult !== false) return;
+
+    const { playlist_id } = req.body;
+
+    const playlist = await Models.Playlist.findOne({
+      where: { id: playlist_id },
+    });
+
+    if (!playlist) {
+      return errorResponseWithoutData(res, messages.playlistNotExists, 400);
+    }
+
+    if (
+      playlist.playlist_type === PLAYLIST_TYPE.PRIVATE &&
+      playlist.created_by !== req.user.id
+    ) {
+      return errorResponseWithoutData(
+        res,
+        messages.playlistAccessNotAllowed,
+        400
+      );
+    }
+
+    playlist.likes += 1;
+
+    playlist.save();
+
+    return successResponseWithoutData(res, messages.playlistLikedSuccess, 400);
+  } catch (error) {
+    return errorResponseWithoutData(
+      res,
+      `${messages.somethingWentWrong}: ${error}`,
+      400
+    );
+  }
+};
+
+module.exports.getAllPlaylists = async (req, res) => {
+  try {
+    const { page, pageSize } = req.query;
+
+    const limit = parseInt(pageSize || 10);
+    const offset = (parseInt(page) - 1) * parseInt(pageSize) || 0;
+
+    const { count, rows } = await Models.Playlist.findAndCountAll({
+      where: { playlist_type: PLAYLIST_TYPE.PUBLIC },
+      order: [["likes", "DESC"]],
+      limit,
+      offset,
+    });
+
+    const playlists = rows;
+
+    if (!playlists) {
+      return errorResponseWithoutData(res, messages.playlistNotExists);
+    }
+
+    return successResponseData(
+      res,
+      playlists,
+      200,
+      messages.playlistFetchSuccess,
+      {
+        page: parseInt(page) || 1,
+        pageSize: parseInt(pageSize) || 10,
+        totalDataCount: count,
+      }
+    );
+  } catch (error) {
     return errorResponseWithoutData(
       res,
       `${messages.somethingWentWrong}: ${error}`,

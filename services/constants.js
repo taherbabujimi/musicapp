@@ -13,4 +13,9 @@ module.exports = {
     ADD_GENRE: "add_genre",
     DELETE_GENRE: "delete_genre",
   },
+
+  PLAYLIST_TYPE: {
+    PUBLIC: "public",
+    PRIVATE: "private",
+  },
 };

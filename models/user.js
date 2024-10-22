@@ -36,7 +36,7 @@ module.exports = (sequelize, DataTypes) => {
       },
       usertype: {
         type: DataTypes.ENUM(USERTYPE),
-        defaultValue: "user",
+        defaultValue: USER_TYPE.USER,
         allowNull: false,
       },
       user_genre_preference: {

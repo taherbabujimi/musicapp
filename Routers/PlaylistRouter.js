@@ -3,6 +3,9 @@ const {
   addSongsToPlaylist,
   removeSongsFromPlaylist,
   deletePlaylist,
+  getPlaylist,
+  likePlaylist,
+  getAllPlaylists,
 } = require("../Controllers/playlistController");
 
 const { verifyJWT } = require("../Middlewares/authMiddleware");
@@ -39,6 +42,27 @@ playlistRoute.delete(
   verifyJWT,
   verifyUsertypeAndPermission([USER_TYPE.USER]),
   deletePlaylist
+);
+
+playlistRoute.get(
+  "/getPlaylist",
+  verifyJWT,
+  verifyUsertypeAndPermission([USER_TYPE.USER]),
+  getPlaylist
+);
+
+playlistRoute.post(
+  "/likePlaylist",
+  verifyJWT,
+  verifyUsertypeAndPermission([USER_TYPE.USER]),
+  likePlaylist
+);
+
+playlistRoute.get(
+  "/getAllPlaylists",
+  verifyJWT,
+  verifyUsertypeAndPermission([USER_TYPE.USER]),
+  getAllPlaylists
 );
 
 module.exports = playlistRoute;

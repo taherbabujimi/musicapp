@@ -140,11 +140,11 @@ module.exports.searchSongs = async (req, res) => {
     const { page, pageSize } = req.query;
 
     const offset = (parseInt(page) - 1) * parseInt(pageSize) || 0;
-    const limit = parseInt(pageSize || 8);
+    const limit = parseInt(pageSize || 10);
 
     const { genrename } = req.body;
 
-    const songsAsPerGenre = await Models.Song.findAll({
+    const { count, rows } = await Models.Song.findAndCountAll({
       include: [
         {
           model: Models.Genre,
@@ -154,6 +154,8 @@ module.exports.searchSongs = async (req, res) => {
       offset,
       limit,
     });
+
+    const songsAsPerGenre = rows;
 
     if (!songsAsPerGenre) {
       return errorResponseWithoutData(res, messages.songNotFetched, 400);
@@ -171,7 +173,12 @@ module.exports.searchSongs = async (req, res) => {
       res,
       songsWithoutGenres,
       200,
-      messages.songFetchSuccessAsGenre
+      messages.songFetchSuccessAsGenre,
+      {
+        page: parseInt(page) || 1,
+        pageSize: parseInt(pageSize) || 10,
+        totalDataCount: count,
+      }
     );
   } catch (error) {
     return errorResponseWithoutData(
@@ -187,7 +194,7 @@ module.exports.getRecommendedSongs = async (req, res) => {
     const { page, pageSize } = req.query;
 
     const offset = (parseInt(page) - 1) * parseInt(pageSize) || 0;
-    const limit = parseInt(pageSize || 8);
+    const limit = parseInt(pageSize || 10);
 
     const user = await Models.User.findOne({
       where: { id: req.user.id },
@@ -198,17 +205,23 @@ module.exports.getRecommendedSongs = async (req, res) => {
     }
 
     if (user.user_genre_preference === null) {
-      const songs = await Models.Song.findAll({
+      const { count, rows } = await Models.Song.findAndCountAll({
         limit,
         offset,
       });
+
+      const songs = rows;
 
       return successResponseData(
         res,
         songs,
         200,
         messages.recommendedSongFetch,
-        { limit: limit, offset: offset }
+        {
+          page: parseInt(page) || 1,
+          pageSize: parseInt(pageSize) || 10,
+          totalDataCount: count,
+        }
       );
     }
 
@@ -228,7 +241,7 @@ module.exports.getRecommendedSongs = async (req, res) => {
       }
     }
 
-    const song = await Models.Song.findAll({
+    const { count, rows } = await Models.Song.findAndCountAll({
       include: [
         {
           model: Models.Genre,
@@ -238,6 +251,8 @@ module.exports.getRecommendedSongs = async (req, res) => {
       offset,
       limit,
     });
+
+    const song = rows;
 
     if (!song) {
       return errorResponseWithoutData(res, messages.somethingWentWrong, 400);
@@ -255,7 +270,12 @@ module.exports.getRecommendedSongs = async (req, res) => {
       res,
       songsWithoutGenres,
       200,
-      messages.recommendedSongFetch
+      messages.recommendedSongFetch,
+      {
+        page: parseInt(page) || 1,
+        pageSize: parseInt(pageSize) || 10,
+        totalDataCount: count,
+      }
     );
   } catch (error) {
     return errorResponseWithoutData(

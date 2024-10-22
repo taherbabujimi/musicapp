@@ -4,7 +4,7 @@ const { errorResponseData } = require("../responses");
 const { messages } = require("../messages");
 
 module.exports = {
-  deletePlaylistSchema(body, res) {
+  playlistIdSchema(body, res) {
     const Schema = Joi.object({
       playlist_id: Joi.number().required(),
     });

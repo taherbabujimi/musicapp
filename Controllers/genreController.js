@@ -83,11 +83,13 @@ module.exports.getUserMusicGenre = async (req, res) => {
       0
     );
 
-    const genres = await Models.Genre.findAll({
+    const { count, rows } = await Models.Genre.findAndCountAll({
       where: { id: { [Op.in]: genreIds } },
       offset,
       limit,
     });
+
+    const genres = rows;
 
     let genreWithPercentage = [];
     for (let i = 0; i < genres.length; i++) {
@@ -104,7 +106,12 @@ module.exports.getUserMusicGenre = async (req, res) => {
       res,
       genreWithPercentage,
       200,
-      messages.previousGenrePreferenceFetched
+      messages.previousGenrePreferenceFetched,
+      {
+        page: parseInt(page) || 1,
+        pageSize: parseInt(pageSize) || 10,
+        totalDataCount: count,
+      }
     );
   } catch (error) {
     return errorResponseWithoutData(

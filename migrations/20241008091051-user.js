@@ -27,7 +27,7 @@ module.exports = {
       },
       usertype: {
         type: Sequelize.ENUM(USERTYPE),
-        defaultValue: "user",
+        defaultValue: USER_TYPE.USER,
         allowNull: false,
       },
       createdAt: {
