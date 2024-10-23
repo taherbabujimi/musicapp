@@ -6,6 +6,7 @@ const {
   getPlaylist,
   likePlaylist,
   getAllPlaylists,
+  unlikePlaylist,
 } = require("../Controllers/playlistController");
 
 const { verifyJWT } = require("../Middlewares/authMiddleware");
@@ -63,6 +64,13 @@ playlistRoute.get(
   verifyJWT,
   verifyUsertypeAndPermission([USER_TYPE.USER]),
   getAllPlaylists
+);
+
+playlistRoute.post(
+  "/unlikePlaylist",
+  verifyJWT,
+  verifyUsertypeAndPermission([USER_TYPE.USER]),
+  unlikePlaylist
 );
 
 module.exports = playlistRoute;

@@ -28,6 +28,7 @@ module.exports = {
     playlistAccessNotAllowed: "You cannot access this playlist.",
     playlistFetchSuccess: "Playlist fetched successfully.",
     playlistLikedSuccess: "Playlist liked successfully.",
+    playlistUnlikedSuccess: "Playlist unliked successfully.",
     errorDeletingPlaylist: "Something went wrong while deleting playlist.",
     songAddToPlaylistSuccess: "Song added to playlist successfully.",
     userNotHavePlaylist: "You don't have a playlist with this id.",

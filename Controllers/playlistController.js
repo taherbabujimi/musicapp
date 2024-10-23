@@ -148,6 +148,7 @@ module.exports.deletePlaylist = async (req, res) => {
     );
 
     if (!playlist) {
+      await transaction.rollback();
       return errorResponseWithoutData(res, messages.playlistNotExists, 400);
     }
 
@@ -281,11 +282,40 @@ module.exports.likePlaylist = async (req, res) => {
       );
     }
 
-    playlist.likes += 1;
-
-    playlist.save();
+    await playlist.addLikedBy(req.user.id);
 
     return successResponseWithoutData(res, messages.playlistLikedSuccess, 400);
+  } catch (error) {
+    return errorResponseWithoutData(
+      res,
+      `${messages.somethingWentWrong}: ${error}`,
+      400
+    );
+  }
+};
+
+module.exports.unlikePlaylist = async (req, res) => {
+  try {
+    const validationResult = playlistIdSchema(req.body, res);
+    if (validationResult !== false) return;
+
+    const { playlist_id } = req.body;
+
+    const playlist = await Models.Playlist.findOne({
+      where: { id: playlist_id },
+    });
+
+    if (!playlist) {
+      return errorResponseWithoutData(res, messages.playlistNotExists, 400);
+    }
+
+    await playlist.removeUser(req.user.id);
+
+    return successResponseWithoutData(
+      res,
+      messages.playlistUnlikedSuccess,
+      200
+    );
   } catch (error) {
     return errorResponseWithoutData(
       res,
@@ -304,10 +334,31 @@ module.exports.getAllPlaylists = async (req, res) => {
 
     const { count, rows } = await Models.Playlist.findAndCountAll({
       where: { playlist_type: PLAYLIST_TYPE.PUBLIC },
-      order: [["likes", "DESC"]],
+      attributes: [
+        "id",
+        "playlistname",
+        [sequelize.fn("COUNT", sequelize.col("likedBy.id")), "userCount"],
+      ],
+      include: [
+        {
+          model: Models.User,
+          as: "likedBy",
+          attributes: ["id", "username", "email"],
+        },
+      ],
+      group: ["Playlist.id", "Playlist.playlistname"],
       limit,
       offset,
     });
+
+    // const playlistsWithUserCount = rows
+    //   .map((playlist) => ({
+    //     id: playlist.id,
+    //     playlistname: playlist.playlistname,
+    //     created_by: playlist.created_by,
+    //     likes: playlist.Users.length,
+    //   }))
+    //   .sort((a, b) => b.likes - a.likes);
 
     const playlists = rows;
 

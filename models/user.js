@@ -10,7 +10,15 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       this.hasMany(models.Song, { foreignKey: { field: "created_by" } });
       this.hasMany(models.Genre, { foreignKey: { field: "created_by" } });
-      this.hasMany(models.Playlist, { foreignKey: { field: "created_by" } });
+      this.hasMany(models.Playlist, {
+        foreignKey: { field: "created_by" },
+      });
+      this.belongsToMany(models.Playlist, {
+        through: "playlists_likes",
+        as: "liker",
+        foreignKey: "user_id",
+        otherKey: "playlist_id",
+      });
     }
   }
   User.init(

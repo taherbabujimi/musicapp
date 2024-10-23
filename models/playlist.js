@@ -12,6 +12,12 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "playlist_id",
         otherKey: "song_id",
       });
+      this.belongsToMany(models.User, {
+        through: "playlists_likes",
+        as: "likedBy",
+        foreignKey: "playlist_id",
+        otherKey: "user_id",
+      });
       this.belongsTo(models.User, {
         foreignKey: { field: "created_By" },
       });
