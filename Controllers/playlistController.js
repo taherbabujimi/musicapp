@@ -327,40 +327,51 @@ module.exports.unlikePlaylist = async (req, res) => {
 
 module.exports.getAllPlaylists = async (req, res) => {
   try {
-    const { page, pageSize } = req.query;
+    const { page, pageSize, search } = req.query;
 
     const limit = parseInt(pageSize || 10);
     const offset = (parseInt(page) - 1) * parseInt(pageSize) || 0;
 
-    const { count, rows } = await Models.Playlist.findAndCountAll({
-      where: { playlist_type: PLAYLIST_TYPE.PUBLIC },
+    const playlists = await Models.Playlist.findAll({
+      subQuery: false,
+      where: {
+        [Op.and]: [
+          { playlist_type: PLAYLIST_TYPE.PUBLIC },
+          { playlistname: { [Op.like]: "%" + search + "%" } },
+        ],
+      },
       attributes: [
         "id",
         "playlistname",
-        [sequelize.fn("COUNT", sequelize.col("likedBy.id")), "userCount"],
+        "created_by",
+        "createdAt",
+        "updatedAt",
+        [sequelize.fn("COUNT", sequelize.col("likedBy.id")), "likes"],
       ],
       include: [
         {
           model: Models.User,
           as: "likedBy",
-          attributes: ["id", "username", "email"],
+          attributes: [],
         },
+      ],
+      order: [
+        [
+          sequelize.fn(
+            "COUNT",
+            sequelize.fn("DISTINCT", sequelize.col("likedBy.id"))
+          ),
+          "DESC",
+        ],
       ],
       group: ["Playlist.id", "Playlist.playlistname"],
       limit,
       offset,
     });
 
-    // const playlistsWithUserCount = rows
-    //   .map((playlist) => ({
-    //     id: playlist.id,
-    //     playlistname: playlist.playlistname,
-    //     created_by: playlist.created_by,
-    //     likes: playlist.Users.length,
-    //   }))
-    //   .sort((a, b) => b.likes - a.likes);
-
-    const playlists = rows;
+    const count = await Models.Playlist.count({
+      where: { playlist_type: PLAYLIST_TYPE.PUBLIC },
+    });
 
     if (!playlists) {
       return errorResponseWithoutData(res, messages.playlistNotExists);
