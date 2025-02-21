@@ -12,6 +12,7 @@ module.exports = {
     genreErrorAdding: "Error adding genres:",
     genreAlreadyExists: "Genre with this name already exist.",
     genreCreated: "Genre created successfully.",
+    genreNotExist: "Genre with this name does not exists.",
     songAlreadyExists: "Song with this name already exist.",
     songCreated: "Song added successfully.",
     songNotFetched: "Something went wrong while fetching songs.",

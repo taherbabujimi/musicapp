@@ -16,23 +16,27 @@ const { Op } = require("sequelize");
 module.exports.addGenre = async (req, res) => {
   try {
     const validationResponse = addGenreSchema(req.body, res);
-
     if (validationResponse !== false) return;
 
     const genrename = req.body.genrename.replace(/ +/g, "");
 
-    const oldGenre = await Models.Genre.findOne({
-      where: { genrename: genrename },
-    });
+    const data = await Models.sequelize.query(
+      "CALL addGenre(:genrename, :created_by)",
+      {
+        replacements: {
+          genrename,
+          created_by: req.user.id,
+        },
+      }
+    );
 
-    if (oldGenre) {
+    const genre = data[0].result;
+
+    if (genre.message === "Genre already exist") {
       return errorResponseWithoutData(res, messages.genreAlreadyExists, 400);
     }
 
-    const genre = await Models.Genre.create({
-      genrename,
-      created_by: req.user.id,
-    });
+    console.log(genre);
 
     return successResponseData(res, genre, 200, messages.genreCreated);
   } catch (error) {

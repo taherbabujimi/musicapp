@@ -129,32 +129,26 @@ module.exports.getSongsByGenre = async (req, res) => {
 
     const { genrename } = req.body;
 
-    const songsAsPerGenre = await Models.Song.findAll({
-      include: [
-        {
-          model: Models.Genre,
-          where: { genrename },
+    const data = await Models.sequelize.query(
+      "CALL getSongsByGenre(:genrename, :limit, :offset)",
+      {
+        replacements: {
+          genrename,
+          limit,
+          offset,
         },
-      ],
-      offset,
-      limit,
-    });
+      }
+    );
 
-    if (!songsAsPerGenre) {
-      return errorResponseWithoutData(res, messages.songNotFetched, 400);
+    const songs = data[0].result;
+
+    if (songs.message === "Genre does not exist") {
+      return errorResponseWithoutData(res, messages.genreNotExist, 400);
     }
-
-    const songsWithoutGenres = songsAsPerGenre.map((song) => ({
-      id: song.dataValues.id,
-      songname: song.dataValues.songname,
-      created_by: song.dataValues.created_by,
-      createdAt: song.dataValues.createdAt,
-      updatedAt: song.dataValues.updatedAt,
-    }));
 
     return successResponseData(
       res,
-      songsWithoutGenres,
+      songs,
       200,
       messages.songFetchSuccessAsGenre
     );

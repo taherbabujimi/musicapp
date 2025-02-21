@@ -58,13 +58,27 @@ BEGIN
 END
 
 /* Procedure to get songs by genre */
-CREATE PROCEDURE music_app.getSongsByGenre(givenGenreName VARCHAR(255))
+CREATE PROCEDURE music_app.getSongsByGenre(givenGenreName VARCHAR(255), givenLimit INT, givenOffset INT)
 DETERMINISTIC
 BEGIN
     IF EXISTS(SELECT * FROM genres WHERE genrename = givenGenreName) THEN
-        SELECT JSON_OBJECT(
-            ''
-        )
+        SELECT JSON_ARRAYAGG(
+            JSON_OBJECT(
+                'id', s.id,
+                'songname', s.songname,
+                'created_by', s.created_by,
+                'createdAt', s.createdAt,
+                'updatedAt', s.updatedAt
+            )
+        ) AS result
+        FROM (
+            SELECT s.id, s.songname, s.created_by, s.createdAt, s.updatedAt
+            FROM genres g
+            LEFT JOIN songs_genres sg ON g.id = sg.genre_id
+            LEFT JOIN songs s ON sg.song_id = s.id
+            WHERE g.genrename = givenGenreName
+            LIMIT givenLimit OFFSET givenOffset
+        ) s;
     ELSE
         SELECT JSON_OBJECT(
             'message', 'Genre does not exist'
