@@ -26,21 +26,25 @@ module.exports.createPlaylist = async (req, res) => {
 
     const { playlistname } = req.body;
 
-    const oldPlaylist = await Models.Playlist.findOne({
-      where: { playlistname: playlistname, created_by: req.user.id },
-    });
+    const data = await Models.sequelize.query(
+      "CALL addPlaylist(:playlistname, :createdBy)",
+      {
+        replacements: {
+          playlistname,
+          createdBy: req.user.id,
+        },
+      }
+    );
 
-    if (oldPlaylist) {
+    const playlist = data[0].result;
+
+    if (playlist.message === "Playlist already exist") {
       return errorResponseWithoutData(res, messages.playlistAlreadyExists, 400);
     }
 
-    const playlist = await Models.Playlist.create({
-      playlistname: playlistname,
-      created_by: req.user.id,
-    });
-
     return successResponseData(res, playlist, 200, messages.playlistCreated);
   } catch (error) {
+    console.log(error);
     return errorResponseWithoutData(
       res,
       `${messages.somethingWentWrong}: ${error}`,
@@ -57,29 +61,24 @@ module.exports.addSongsToPlaylist = async (req, res) => {
 
     const { song_id, playlist_id } = req.body;
 
-    const song = await Models.Song.findOne({
-      where: { id: song_id },
-    });
+    const data = await Models.sequelize.query(
+      "CALL addSongToPlaylist(:song_id, :playlist_id, :user_id)",
+      {
+        replacements: {
+          song_id,
+          playlist_id,
+          user_id: req.user.id,
+        },
+      }
+    );
 
-    if (!song) {
-      return errorResponseWithoutData(res, messages.songNotExists, 400);
-    }
-
-    const playlist = await Models.Playlist.findOne({
-      where: { id: playlist_id, created_by: req.user.id },
-    });
-
-    if (!playlist) {
-      return errorResponseWithoutData(res, messages.userNotHavePlaylist, 400);
-    }
-
-    const addSongToPlaylist = await song.addPlaylist(playlist.id);
+    const songToPlaylist = data[0].result;
 
     return successResponseData(
       res,
-      addSongToPlaylist,
-      200,
-      messages.songAddToPlaylistSuccess
+      songToPlaylist.data,
+      songToPlaylist.status,
+      songToPlaylist.message
     );
   } catch (error) {
     return errorResponseWithoutData(
@@ -97,28 +96,23 @@ module.exports.removeSongsFromPlaylist = async (req, res) => {
 
     const { song_id, playlist_id } = req.body;
 
-    const song = await Models.Song.findOne({
-      where: { id: song_id },
-    });
+    const data = await Models.sequelize.query(
+      "CALL removeSongFromPlaylist(:song_id, :playlist_id, :user_id)",
+      {
+        replacements: {
+          song_id,
+          playlist_id,
+          user_id: req.user.id,
+        },
+      }
+    );
 
-    if (!song) {
-      return errorResponseWithoutData(res, messages.songNotExists, 400);
-    }
-
-    const playlist = await Models.Playlist.findOne({
-      where: { id: playlist_id, created_by: req.user.id },
-    });
-
-    if (!playlist) {
-      return errorResponseWithoutData(res, messages.userNotHavePlaylist, 400);
-    }
-
-    await song.removePlaylist(playlist.id);
+    const removedFromPlaylist = data[0].result;
 
     return successResponseWithoutData(
       res,
-      messages.songRemoveFromPlaylist,
-      200
+      removedFromPlaylist.message,
+      removedFromPlaylist.status
     );
   } catch (error) {
     return errorResponseWithoutData(
@@ -130,49 +124,28 @@ module.exports.removeSongsFromPlaylist = async (req, res) => {
 };
 
 module.exports.deletePlaylist = async (req, res) => {
-  const transaction = await sequelize.transaction();
   try {
     const validationResult = deletePlaylistSchema(req.body, res);
     if (validationResult !== false) return;
 
     const { playlist_id } = req.body;
 
-    const playlist = await Models.Playlist.findOne(
+    const data = await Models.sequelize.query(
+      "CALL deletePlaylist(:playlist_id, :user_id)",
       {
-        where: { id: playlist_id, created_by: req.user.id },
-        include: [{ model: Models.Song, through: { attributes: [] } }],
-      },
-      { transaction }
+        replacements: {
+          playlist_id,
+          user_id: req.user.id,
+        },
+      }
     );
 
-    if (!playlist) {
-      return errorResponseWithoutData(res, messages.playlistNotExists, 400);
-    }
-
-    const songs = playlist.dataValues.Songs.map((song) => song.id);
-
-    await playlist.destroy({ transaction });
-
-    const promises = songs.map((song_id) =>
-      playlist.removeSong(song_id, { transaction })
+    return successResponseWithoutData(
+      res,
+      data[0].result.message,
+      data[0].result.status
     );
-
-    Promise.all(promises)
-      .then(async (result) => {
-        await transaction.commit();
-        return successResponseWithoutData(res, messages.playlistDeleted, 200);
-      })
-      .catch(async (error) => {
-        await transaction.rollback();
-        return errorResponseData(
-          res,
-          messages.errorDeletingPlaylist,
-          error,
-          400
-        );
-      });
   } catch (error) {
-    await transaction.rollback();
     return errorResponseWithoutData(
       res,
       `${messages.somethingWentWrong}: ${error}`,

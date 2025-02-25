@@ -36,8 +36,6 @@ module.exports.addGenre = async (req, res) => {
       return errorResponseWithoutData(res, messages.genreAlreadyExists, 400);
     }
 
-    console.log(genre);
-
     return successResponseData(res, genre, 200, messages.genreCreated);
   } catch (error) {
     return errorResponseWithoutData(
@@ -59,11 +57,15 @@ module.exports.getUserMusicGenre = async (req, res) => {
     const offset = (parseInt(page) - 1) * parseInt(pageSize) || 0;
     const limit = parseInt(pageSize || 8);
 
-    const user = await Models.User.findOne({
-      where: { id: user_id },
+    const data = await Models.sequelize.query("CALL getOneUser(:user_id)", {
+      replacements: {
+        user_id,
+      },
     });
 
-    if (!user) {
+    const user = data[0].result;
+
+    if (user.message === "User does not exist") {
       return errorResponseWithoutData(res, messages.userNotExist, 400);
     }
 
@@ -87,19 +89,25 @@ module.exports.getUserMusicGenre = async (req, res) => {
       0
     );
 
-    const genres = await Models.Genre.findAll({
-      where: { id: { [Op.in]: genreIds } },
-      offset,
-      limit,
-    });
+    const genres = await Models.sequelize.query(
+      "CALL getGenresUsingIds(:genreIds, :limit, :offset)",
+      {
+        replacements: {
+          genreIds: JSON.stringify(genreIds),
+          limit,
+          offset,
+        },
+      }
+    );
 
     let genreWithPercentage = [];
+
     for (let i = 0; i < genres.length; i++) {
       let percentage = Math.round(
         (userGenrePreference.json[i].count / countTotal) * 100
       );
       genreWithPercentage.push({
-        genre_name: genres[i].dataValues.genrename,
+        genre_name: genres[i].genrename,
         percentage: `${percentage}%`,
       });
     }

@@ -168,74 +168,46 @@ module.exports.getRecommendedSongs = async (req, res) => {
     const offset = (parseInt(page) - 1) * parseInt(pageSize) || 0;
     const limit = parseInt(pageSize || 8);
 
-    const user = await Models.User.findOne({
-      where: { id: req.user.id },
-    });
-
-    if (!user) {
-      return errorResponseWithoutData(res, messages.somethingWentWrong, 400);
-    }
-
-    if (user.user_genre_preference === null) {
-      const songs = await Models.Song.findAll({
-        limit,
-        offset,
-      });
-
-      return successResponseData(
-        res,
-        songs,
-        200,
-        messages.recommendedSongFetch,
-        { limit: limit, offset: offset }
-      );
-    }
-
-    const jsonData = user.user_genre_preference.json;
-
-    jsonData.sort((a, b) => b.count - a.count);
+    const user = req.user;
 
     let bestGenres = [];
 
-    if (jsonData.length >= process.env.TOP_GENRE_COUNT) {
-      for (let i = 0; i < process.env.TOP_GENRE_COUNT; i++) {
-        bestGenres.push(jsonData[i].genre_id);
+    if (user.user_genre_preference !== null) {
+      const jsonData = user.user_genre_preference.json;
+
+      jsonData.sort((a, b) => b.count - a.count);
+
+      if (jsonData.length >= process.env.TOP_GENRE_COUNT) {
+        for (let i = 0; i < process.env.TOP_GENRE_COUNT; i++) {
+          bestGenres.push(jsonData[i].genre_id);
+        }
+
+        bestGenres = JSON.stringify(bestGenres);
+      } else if (jsonData.length < process.env.TOP_GENRE_COUNT) {
+        for (let i = 0; i < jsonData.length; i++) {
+          bestGenres.push(jsonData[i].genre_id);
+        }
+
+        bestGenres = JSON.stringify(bestGenres);
       }
-    } else if (jsonData.length < process.env.TOP_GENRE_COUNT) {
-      for (let i = 0; i < jsonData.length; i++) {
-        bestGenres.push(jsonData[i].genre_id);
-      }
+    } else {
+      bestGenres = null;
     }
 
-    const song = await Models.Song.findAll({
-      include: [
-        {
-          model: Models.Genre,
-          where: { id: { [Op.in]: bestGenres } },
+    const data = await Models.sequelize.query(
+      "CALL getAllSongs(:bestGenres, :limit, :offset)",
+      {
+        replacements: {
+          limit,
+          offset,
+          bestGenres,
         },
-      ],
-      offset,
-      limit,
-    });
-
-    if (!song) {
-      return errorResponseWithoutData(res, messages.somethingWentWrong, 400);
-    }
-
-    const songsWithoutGenres = song.map((song) => ({
-      id: song.dataValues.id,
-      songname: song.dataValues.songname,
-      created_by: song.dataValues.created_by,
-      createdAt: song.dataValues.createdAt,
-      updatedAt: song.dataValues.updatedAt,
-    }));
-
-    return successResponseData(
-      res,
-      songsWithoutGenres,
-      200,
-      messages.recommendedSongFetch
+      }
     );
+
+    const song = data[0].result;
+
+    return successResponseData(res, song, 200, messages.recommendedSongFetch);
   } catch (error) {
     return errorResponseWithoutData(
       res,

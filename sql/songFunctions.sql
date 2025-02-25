@@ -85,3 +85,49 @@ BEGIN
         ) AS result;
     END IF;
 END
+
+/* Procedure to get all songs */
+CREATE PROCEDURE music_app.getAllSongs(
+    bestGenreArray JSON,
+    givenLimit INT,
+    givenOffset INT
+)
+DETERMINISTIC
+BEGIN
+    IF (bestGenreArray IS NULL) THEN
+        SELECT JSON_ARRAYAGG(
+            JSON_OBJECT(
+                'id', id,
+                'songname', songname,
+                'created_by', created_by,
+                'createdAt', createdAt,
+                'updatedAt', updatedAt
+            )
+        ) AS result
+        FROM (
+            SELECT * FROM songs
+            LIMIT givenLimit OFFSET givenOffset
+        ) s;
+    ELSE
+        SELECT JSON_ARRAYAGG(
+            JSON_OBJECT(
+                'id', s.id,
+                'songname', s.songname,
+                'created_by', s.created_by,
+                'createdAt', s.createdAt,
+                'updatedAt', s.updatedAt
+            )
+        ) AS result
+        FROM (
+            SELECT DISTINCT s.id, s.songname, s.created_by, s.createdAt, s.updatedAt
+            FROM genres g
+            INNER JOIN songs_genres sg ON g.id = sg.genre_id
+            INNER JOIN songs s ON sg.song_id = s.id
+            WHERE g.id IN (
+                SELECT value
+                FROM JSON_TABLE(bestGenreArray, '$[*]' COLUMNS (value INT PATH '$')) AS jt
+            )
+            LIMIT givenLimit OFFSET givenOffset
+        ) s;
+    END IF;
+END;

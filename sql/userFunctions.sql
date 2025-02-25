@@ -73,3 +73,29 @@ BEGIN
         WHERE email = givenEmail;
     END IF;
 END
+
+/* Procedure to get one user */
+CREATE PROCEDURE music_app.getOneUser(givenUserId INT)
+DETERMINISTIC
+BEGIN
+
+    IF EXISTS (SELECT * FROM users WHERE id = givenUserId) THEN
+        SELECT JSON_OBJECT(
+                'id', id,
+                'username', username,
+                'email', email,
+                'password', password,
+                'usertype', usertype,
+                'createdAt', createdAt,
+                'updatedAt', updatedAt,
+                'user_genre_preference', user_genre_preference,
+                'role_id', role_id
+            ) AS result
+            FROM users
+            WHERE id = givenUserId;
+    ELSE
+        SELECT JSON_OBJECT(
+            'message', 'User does not exist'
+        ) AS result;
+    END IF;
+END;
