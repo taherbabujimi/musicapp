@@ -42,7 +42,7 @@ module.exports.registerUser = async (req, res) => {
 
     const user = data[0][0].result;
 
-    return successResponseData(res, user, 200, messages.userCreated);
+    return successResponseData(res, user.data, user.status, user.message);
   } catch (error) {
     return errorResponseWithoutData(
       res,
@@ -61,33 +61,31 @@ module.exports.userLogin = async (req, res) => {
 
     const email = req.body.email.toLowerCase();
 
-    const data = await Models.sequelize.query("CALL findUser(:email)", {
+    const data = await Models.sequelize.query("CALL userLogin(:email)", {
       replacements: {
         email,
       },
     });
 
-    let user = data[0].result.message;
+    let accessToken;
 
-    if (user === "User does not exist") {
-      return errorResponseWithoutData(res, messages.incorrectCredentials, 400);
+    let user = data[0].result;
+
+    if (user.data !== null) {
+      const isPasswordValid = await validPassword(password, user.password);
+
+      if (!isPasswordValid) {
+        return errorResponseWithoutData(
+          res,
+          messages.incorrectCredentials,
+          400
+        );
+      }
+
+      accessToken = await generateAccessToken(user.data);
     }
 
-    const isPasswordValid = await validPassword(password, user);
-
-    if (!isPasswordValid) {
-      return errorResponseWithoutData(res, messages.incorrectCredentials, 400);
-    }
-
-    const accessToken = await generateAccessToken(user);
-
-    const userData = {
-      username: user.username,
-      email: user.email,
-      usertype: user.usertype,
-    };
-
-    return successResponseData(res, userData, 200, messages.userLoginSuccess, {
+    return successResponseData(res, user.data, user.status, user.message, {
       token: accessToken,
     });
   } catch (error) {
@@ -99,7 +97,7 @@ module.exports.userLogin = async (req, res) => {
   }
 };
 
-module.exports.addAdmin = async (req, res) => {
+module.exports.registerAdmin = async (req, res) => {
   try {
     let { password, role_id } = req.body;
 
@@ -121,13 +119,9 @@ module.exports.addAdmin = async (req, res) => {
       }
     );
 
-    const admin = data[0].result.message;
+    const admin = data[0].result;
 
-    if (admin === "Admin already exists") {
-      return validationErrorResponseData(res, messages.adminAlreadyExists, 400);
-    }
-
-    return successResponseData(res, admin, 200, messages.adminCreatedSuccess);
+    return successResponseData(res, admin.data, admin.status, admin.message);
   } catch (error) {
     return errorResponseWithoutData(
       res,

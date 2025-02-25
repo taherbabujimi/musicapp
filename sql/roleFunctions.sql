@@ -1,10 +1,12 @@
 /* Procedure to add role */
-CREATE PROCEDURE music_app.addRole(givenRoleName VARCHAR(255), givenPermissions JSON)
-DETERMINISTIC
+CREATE DEFINER=`root`@`localhost` PROCEDURE `music_app`.`addRole`(givenRoleName VARCHAR(255), givenPermissions JSON)
+    DETERMINISTIC
 BEGIN
 IF EXISTS(SELECT * FROM roles WHERE role_name = givenRoleName) THEN
     SELECT JSON_OBJECT(
-    'message', 'Role with this name already exists'
+    'data', NULL,
+    'message', 'Role with this name already exists',
+    'status', 400
     ) AS result;
 ELSE
 	START TRANSACTION;
@@ -16,14 +18,17 @@ ELSE
 	COMMIT;
 
     SELECT JSON_OBJECT(
-    'message', JSON_OBJECT(
+    'data', JSON_OBJECT(
         'id', id,
         'role_name', role_name,
         'updatedAt', updatedAt,
         'createdAt', createdAt
-    )
+    ),
+    'message', 'Role added successfully',
+    'status', 200
     ) AS result
     FROM roles
     WHERE role_name = givenRoleName;
 END IF;
+
 END

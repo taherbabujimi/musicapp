@@ -8,8 +8,8 @@ module.exports = {
     return await bcrypt.hashSync(password, bcrypt.genSaltSync(10), null);
   },
 
-  async validPassword(givenPassword, user) {
-    return await bcrypt.compare(givenPassword, user.password);
+  async validPassword(givenPassword, password) {
+    return await bcrypt.compare(givenPassword, password);
   },
 
   async generateAccessToken(user) {

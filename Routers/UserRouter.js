@@ -1,7 +1,7 @@
 const {
   registerUser,
   userLogin,
-  addAdmin,
+  registerAdmin,
 } = require("../Controllers/UserController/UserController.js");
 const { verifyJWT } = require("../Middlewares/authMiddleware.js");
 const {
@@ -14,10 +14,10 @@ const userRoute = require("express").Router();
 userRoute.post("/add", registerUser);
 userRoute.post("/login", userLogin);
 userRoute.post(
-  "/addAdmin",
+  "/registerAdmin",
   verifyJWT,
   verifyUsertypeAndPermission([USER_TYPE.SUPER_ADMIN]),
-  addAdmin
+  registerAdmin
 );
 
 module.exports = userRoute;

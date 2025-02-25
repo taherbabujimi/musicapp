@@ -1,25 +1,31 @@
 /*Procedure to add playlist*/
-CREATE PROCEDURE music_app.addPlaylist(givenPlaylistName VARCHAR(200), givenCreatedBy INT)
+CREATE DEFINER=`root`@`localhost` PROCEDURE `music_app`.`createPlaylist`(givenPlaylistName VARCHAR(200), givenCreatedBy INT)
 BEGIN
     IF EXISTS(SELECT * FROM playlists WHERE playlistname = givenPlaylistName AND created_by = givenCreatedBy) THEN
         SELECT JSON_OBJECT(
-            'message', 'Playlist already exist'
+        	'data', NULL,
+            'message', 'Playlist with this name already exists',
+            'status', 400
         ) AS result;
     ELSE
         INSERT INTO playlists (playlistname, created_by, createdAt, updatedAt)
         VALUES (givenPlaylistName, givenCreatedBy, NOW(), NOW());
 
         SELECT JSON_OBJECT(
-                'id', id,
-                'playlistname', playlistname,
-                'created_by', created_by,
-                'createdAt', createdAt,
-                'updatedAt', updatedAt
+                'data', JSON_OBJECT(
+	                	'id', id,
+		                'playlistname', playlistname,
+		                'created_by', created_by,
+		                'createdAt', createdAt,
+		                'updatedAt', updatedAt
+	                ),
+	             'message', 'Playlist created successfully',
+	             'status', 200
             ) AS result
             FROM playlists
             WHERE id = LAST_INSERT_ID();
     END IF;
-END;
+END
 
 /*Procedure to add song to playlist*/
 CREATE PROCEDURE music_app.addSongToPlaylist(givenSongId INT, givenPlaylistId INT, givenUserId INT)

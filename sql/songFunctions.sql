@@ -1,5 +1,5 @@
 /* Procedure to add song */
-CREATE PROCEDURE `music_app`.`addSong`(givenSongName VARCHAR(255), givenCreatedBy INT, givenPath VARCHAR(255), givenGenres JSON)
+CREATE DEFINER=`root`@`localhost` PROCEDURE `music_app`.`addSong`(givenSongName VARCHAR(255), givenCreatedBy INT, givenPath VARCHAR(255), givenGenres JSON)
     DETERMINISTIC
 BEGIN
     DECLARE new_song_id INT;
@@ -18,14 +18,16 @@ BEGIN
     COMMIT;
     
     SELECT JSON_OBJECT(
-        'message', JSON_OBJECT(
+        'data', JSON_OBJECT(
             'id', id,
             'songname', songname,
             'created_by', created_by,
             'path', path,
             'createdAt', createdAt,
             'updatedAt', updatedAt
-        )
+        ),
+        'message', 'Song added successfully',
+        'status', 200
     ) AS result
     FROM songs
     WHERE id = new_song_id;
@@ -58,18 +60,22 @@ BEGIN
 END
 
 /* Procedure to get songs by genre */
-CREATE PROCEDURE music_app.getSongsByGenre(givenGenreName VARCHAR(255), givenLimit INT, givenOffset INT)
-DETERMINISTIC
+CREATE DEFINER=`root`@`localhost` PROCEDURE `music_app`.`getSongsByGenre`(givenGenreName VARCHAR(255), givenLimit INT, givenOffset INT)
+    DETERMINISTIC
 BEGIN
     IF EXISTS(SELECT * FROM genres WHERE genrename = givenGenreName) THEN
-        SELECT JSON_ARRAYAGG(
-            JSON_OBJECT(
-                'id', s.id,
-                'songname', s.songname,
-                'created_by', s.created_by,
-                'createdAt', s.createdAt,
-                'updatedAt', s.updatedAt
-            )
+        SELECT JSON_OBJECT(
+        	'data', JSON_ARRAYAGG(
+	            	JSON_OBJECT(
+		                'id', s.id,
+		                'songname', s.songname,
+		                'created_by', s.created_by,
+		                'createdAt', s.createdAt,
+		                'updatedAt', s.updatedAt
+		            )
+        	),
+        	'message', 'Fetched all songs as per genre successfully',
+        	'status', 200
         ) AS result
         FROM (
             SELECT s.id, s.songname, s.created_by, s.createdAt, s.updatedAt
@@ -81,43 +87,55 @@ BEGIN
         ) s;
     ELSE
         SELECT JSON_OBJECT(
-            'message', 'Genre does not exist'
+        	'data', NULL,
+            'message', 'Genre with this name does not exists',
+            'status', 400
         ) AS result;
     END IF;
 END
 
-/* Procedure to get all songs */
-CREATE PROCEDURE music_app.getAllSongs(
+/* Procedure to get recommended songs */
+CREATE DEFINER=`root`@`localhost` PROCEDURE `music_app`.`getRecommendedSongs`(
     bestGenreArray JSON,
     givenLimit INT,
     givenOffset INT
 )
-DETERMINISTIC
+    DETERMINISTIC
 BEGIN
     IF (bestGenreArray IS NULL) THEN
-        SELECT JSON_ARRAYAGG(
-            JSON_OBJECT(
-                'id', id,
-                'songname', songname,
-                'created_by', created_by,
-                'createdAt', createdAt,
-                'updatedAt', updatedAt
-            )
-        ) AS result
+        SELECT JSON_OBJECT(
+        	'data',JSON_ARRAYAGG(
+			           JSON_OBJECT(
+			               'id', id,
+			               'songname', songname,
+			               'created_by', created_by,
+			               'createdAt', createdAt,
+			               'updatedAt', updatedAt
+			           )
+        			),
+        	'message', 'Recommended songs fetched successfully',
+        	'status', 200
+        ) 
+        AS result
         FROM (
             SELECT * FROM songs
             LIMIT givenLimit OFFSET givenOffset
         ) s;
     ELSE
-        SELECT JSON_ARRAYAGG(
-            JSON_OBJECT(
-                'id', s.id,
-                'songname', s.songname,
-                'created_by', s.created_by,
-                'createdAt', s.createdAt,
-                'updatedAt', s.updatedAt
-            )
-        ) AS result
+        SELECT JSON_OBJECT(
+        	'data',JSON_ARRAYAGG(
+			           JSON_OBJECT(
+			               'id', id,
+			               'songname', songname,
+			               'created_by', created_by,
+			               'createdAt', createdAt,
+			               'updatedAt', updatedAt
+			           )
+        			),
+        	'message', 'Recommended songs fetched successfully',
+        	'status', 200
+        )
+        AS result
         FROM (
             SELECT DISTINCT s.id, s.songname, s.created_by, s.createdAt, s.updatedAt
             FROM genres g
@@ -130,4 +148,4 @@ BEGIN
             LIMIT givenLimit OFFSET givenOffset
         ) s;
     END IF;
-END;
+END

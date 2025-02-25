@@ -32,11 +32,7 @@ module.exports.addGenre = async (req, res) => {
 
     const genre = data[0].result;
 
-    if (genre.message === "Genre already exist") {
-      return errorResponseWithoutData(res, messages.genreAlreadyExists, 400);
-    }
-
-    return successResponseData(res, genre, 200, messages.genreCreated);
+    return successResponseData(res, genre.data, genre.status, genre.message);
   } catch (error) {
     return errorResponseWithoutData(
       res,
@@ -77,7 +73,7 @@ module.exports.getUserMusicGenre = async (req, res) => {
       );
     }
 
-    const userGenrePreference = user.user_genre_preference;
+    console.log("USER PREFERENCE: ", userGenrePreference.json);
 
     const genreIds = userGenrePreference.json.map((genre) => genre.genre_id);
 

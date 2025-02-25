@@ -27,7 +27,7 @@ module.exports.createPlaylist = async (req, res) => {
     const { playlistname } = req.body;
 
     const data = await Models.sequelize.query(
-      "CALL addPlaylist(:playlistname, :createdBy)",
+      "CALL createPlaylist(:playlistname, :createdBy)",
       {
         replacements: {
           playlistname,
@@ -38,11 +38,12 @@ module.exports.createPlaylist = async (req, res) => {
 
     const playlist = data[0].result;
 
-    if (playlist.message === "Playlist already exist") {
-      return errorResponseWithoutData(res, messages.playlistAlreadyExists, 400);
-    }
-
-    return successResponseData(res, playlist, 200, messages.playlistCreated);
+    return successResponseData(
+      res,
+      playlist.data,
+      playlist.status,
+      playlist.message
+    );
   } catch (error) {
     console.log(error);
     return errorResponseWithoutData(

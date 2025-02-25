@@ -25,15 +25,9 @@ module.exports.addRole = async (req, res) => {
       }
     );
 
-    const role = data[0].result.message;
+    const role = data[0].result;
 
-    if (role === "Role with this name already exists") {
-      return errorResponseWithoutData(res, messages.roleAlreadyExists, 400);
-    }
-
-    console.log(role);
-
-    return successResponseData(res, role, 200, messages.roleAddedSucces);
+    return successResponseData(res, role.data, role.status, role.message);
   } catch (error) {
     return errorResponseWithoutData(
       res,

@@ -4,20 +4,24 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `music_app`.`addGenre`(givenGenreNam
 BEGIN
     IF EXISTS(SELECT * FROM genres WHERE genrename = givenGenreName) THEN
         SELECT JSON_OBJECT(
-            'message', 'Genre already exist'
+        	'data', NULL,
+            'message', 'Genre with this name already exist',
+            'status', 400
         ) AS result;
     ELSE
         INSERT INTO genres (genrename, created_by, createdAt, updatedAt)
         VALUES (givenGenreName, givenCreatedBy, NOW(), NOW());
 
         SELECT JSON_OBJECT(
-            'message', JSON_OBJECT(
-                'id', id,
+        	'data', JSON_OBJECT(
+             	'id', id,
                 'genrename', genrename,
                 'created_by', created_by,
                 'createdAt', createdAt,
                 'updatedAt', updatedAt
-            )
+            ),
+            'message', 'Genre created successfully',
+            'status', 200
         ) AS result
         FROM genres 
         WHERE id = LAST_INSERT_ID();

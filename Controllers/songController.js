@@ -35,9 +35,9 @@ module.exports.addSong = async (req, res) => {
       }
     );
 
-    const song = data[0].result.message;
+    const song = data[0].result;
 
-    return successResponseData(res, song, 200, messages.songCreated);
+    return successResponseData(res, song.data, song.status, song.message);
   } catch (error) {
     return errorResponseWithoutData(
       res,
@@ -142,16 +142,7 @@ module.exports.getSongsByGenre = async (req, res) => {
 
     const songs = data[0].result;
 
-    if (songs.message === "Genre does not exist") {
-      return errorResponseWithoutData(res, messages.genreNotExist, 400);
-    }
-
-    return successResponseData(
-      res,
-      songs,
-      200,
-      messages.songFetchSuccessAsGenre
-    );
+    return successResponseData(res, songs.data, songs.status, songs.message);
   } catch (error) {
     return errorResponseWithoutData(
       res,
@@ -195,7 +186,7 @@ module.exports.getRecommendedSongs = async (req, res) => {
     }
 
     const data = await Models.sequelize.query(
-      "CALL getAllSongs(:bestGenres, :limit, :offset)",
+      "CALL getRecommendedSongs(:bestGenres, :limit, :offset)",
       {
         replacements: {
           limit,
@@ -207,7 +198,7 @@ module.exports.getRecommendedSongs = async (req, res) => {
 
     const song = data[0].result;
 
-    return successResponseData(res, song, 200, messages.recommendedSongFetch);
+    return successResponseData(res, song.data, song.status, song.message);
   } catch (error) {
     return errorResponseWithoutData(
       res,
