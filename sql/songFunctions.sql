@@ -1,9 +1,11 @@
 /* Procedure to add song */
-CREATE DEFINER=`root`@`localhost` PROCEDURE `music_app`.`addSong`(givenSongName VARCHAR(255), givenCreatedBy INT, givenPath VARCHAR(255), givenGenres JSON)
+CREATE PROCEDURE music_app.addSong(givenSongName VARCHAR(255), givenCreatedBy INT, givenPath VARCHAR(255), givenGenres JSON)
     DETERMINISTIC
 BEGIN
     DECLARE new_song_id INT;
-    
+   
+   	CALL verifyUsertypeAndPermission(givenCreatedBy, '["admin"]', '["add_song"]');
+	 
     START TRANSACTION;
     
     INSERT INTO songs (songname, created_by, path, createdAt, updatedAt)
@@ -34,9 +36,12 @@ BEGIN
 END
 
 /* Procedure to get song */
-CREATE PROCEDURE music_app.getSong(givenSongId INT)
-DETERMINISTIC
+CREATE PROCEDURE music_app.getSong(givenSongId INT, givenUserId INT)
+    DETERMINISTIC
 BEGIN
+	
+	CALL verifyUsertypeAndPermission(givenUserId, '["user"]', NULL);
+	 
     IF EXISTS(SELECT * FROM songs WHERE id = givenSongId) THEN
         SELECT JSON_OBJECT(
             'id', s.id,
@@ -60,9 +65,11 @@ BEGIN
 END
 
 /* Procedure to get songs by genre */
-CREATE DEFINER=`root`@`localhost` PROCEDURE `music_app`.`getSongsByGenre`(givenGenreName VARCHAR(255), givenLimit INT, givenOffset INT)
+CREATE PROCEDURE music_app.getSongsByGenre(givenGenreName VARCHAR(255), givenLimit INT, givenOffset INT, givenUserId INT)
     DETERMINISTIC
 BEGIN
+	CALL verifyUsertypeAndPermission(givenUserId, '["user"]', NULL);
+	
     IF EXISTS(SELECT * FROM genres WHERE genrename = givenGenreName) THEN
         SELECT JSON_OBJECT(
         	'data', JSON_ARRAYAGG(

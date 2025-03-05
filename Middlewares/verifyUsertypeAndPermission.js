@@ -17,9 +17,11 @@ module.exports.verifyUsertypeAndPermission = (
         return errorResponseWithoutData(res, messages.notAuthorized, 400);
       }
 
+      console.log("USER: ", JSON.stringify(req.user.dataValues));
+
       if (allowedPermission.length !== 0) {
         const permission_ids = await Models.Role.findOne({
-          where: { id: req.user.role_id },  
+          where: { id: req.user.role_id },
           include: [{ model: Models.Permission, through: { attributes: [] } }],
         });
 

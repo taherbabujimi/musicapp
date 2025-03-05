@@ -1,5 +1,5 @@
 /*Function to register a new user*/
-CREATE DEFINER=`root`@`localhost` FUNCTION `music_app`.`registerUser`(givenUsername VARCHAR(255), givenEmail VARCHAR(255), givenPassword VARCHAR(255)) RETURNS json
+CREATE FUNCTION music_app.registerUser(givenUsername VARCHAR(255), givenEmail VARCHAR(255), givenPassword VARCHAR(255)) RETURNS json
     DETERMINISTIC
 BEGIN
     DECLARE msg JSON;
@@ -28,7 +28,7 @@ BEGIN
 END
 
 /*Procedure to login a user*/
-CREATE DEFINER=`root`@`localhost` PROCEDURE `music_app`.`userLogin`(givenEmail VARCHAR(255))
+CREATE PROCEDURE music_app.userLogin(givenEmail VARCHAR(255))
     DETERMINISTIC
 BEGIN
     IF EXISTS(SELECT * FROM users WHERE email = givenEmail) THEN
@@ -57,7 +57,7 @@ BEGIN
 END
 
 /* Procedure to register Admin */
-CREATE DEFINER=`root`@`localhost` PROCEDURE `music_app`.`registerAdmin`(givenUsername VARCHAR(255), givenEmail VARCHAR(255), givenPassword VARCHAR(255), givenRoleId INT)
+CREATE PROCEDURE music_app.registerAdmin(givenUsername VARCHAR(255), givenEmail VARCHAR(255), givenPassword VARCHAR(255), givenRoleId INT)
     DETERMINISTIC
 BEGIN
     IF EXISTS(SELECT * FROM users WHERE email = givenEmail) THEN
@@ -91,7 +91,7 @@ END
 
 /* Procedure to get one user */
 CREATE PROCEDURE music_app.getOneUser(givenUserId INT)
-DETERMINISTIC
+    DETERMINISTIC
 BEGIN
 
     IF EXISTS (SELECT * FROM users WHERE id = givenUserId) THEN
@@ -113,4 +113,4 @@ BEGIN
             'message', 'User does not exist'
         ) AS result;
     END IF;
-END;
+END

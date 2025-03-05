@@ -16,11 +16,12 @@ module.exports.addRole = async (req, res) => {
     const { role_name, permissions } = req.body;
 
     const data = await Models.sequelize.query(
-      "CALL addRole(:role_name, :permissions)",
+      "CALL addRole(:role_name, :permissions, :user_id)",
       {
         replacements: {
           role_name,
           permissions: JSON.stringify(permissions),
+          user_id: req.user.id,
         },
       }
     );

@@ -1,6 +1,8 @@
 /*Procedure to add playlist*/
-CREATE DEFINER=`root`@`localhost` PROCEDURE `music_app`.`createPlaylist`(givenPlaylistName VARCHAR(200), givenCreatedBy INT)
+CREATE PROCEDURE music_app.createPlaylist(givenPlaylistName VARCHAR(200), givenCreatedBy INT)
 BEGIN
+	CALL verifyUsertypeAndPermission(givenCreatedBy, '["user"]', NULL);
+
     IF EXISTS(SELECT * FROM playlists WHERE playlistname = givenPlaylistName AND created_by = givenCreatedBy) THEN
         SELECT JSON_OBJECT(
         	'data', NULL,
@@ -30,6 +32,8 @@ END
 /*Procedure to add song to playlist*/
 CREATE PROCEDURE music_app.addSongToPlaylist(givenSongId INT, givenPlaylistId INT, givenUserId INT)
 BEGIN
+	CALL verifyUsertypeAndPermission(givenUserId, '["user"]', NULL);
+
     IF EXISTS(SELECT * FROM songs WHERE id = givenSongId) 
        AND EXISTS(SELECT * FROM playlists WHERE id = givenPlaylistId AND created_by = givenUserId) THEN
        
@@ -65,11 +69,13 @@ BEGIN
             'data', NULL
         ) AS result;
     END IF;
-END;
+END
 
 /*Procedure to remove song from the playlist*/
 CREATE PROCEDURE music_app.removeSongFromPlaylist(givenSongId INT, givenPlaylistId INT, givenUserId INT)
 BEGIN
+	CALL verifyUsertypeAndPermission(givenUserId, '["user"]', NULL);
+
     IF EXISTS(SELECT * FROM songs WHERE id = givenSongId) 
        AND EXISTS(SELECT * FROM playlists WHERE id = givenPlaylistId AND created_by = givenUserId) THEN
        
@@ -97,13 +103,15 @@ BEGIN
             'data', NULL
         ) AS result;
     END IF;
-END;
+END
 
 /*Procedure to delete playlist*/
 CREATE PROCEDURE music_app.deletePlaylist(givenPlaylistId INT, givenUserId INT)
 BEGIN
-    DECLARE song_ids JSON;
+	DECLARE song_ids JSON;
     
+	CALL verifyUsertypeAndPermission(givenUserId, '["user"]', NULL);
+
     IF NOT EXISTS(SELECT * FROM playlists WHERE id = givenPlaylistId AND created_by = givenUserId) THEN
         SELECT JSON_OBJECT(
             'status', 400,
@@ -124,4 +132,4 @@ BEGIN
             'data', song_ids
         ) AS result;
     END IF;
-END;
+END

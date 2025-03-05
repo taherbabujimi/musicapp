@@ -17,7 +17,7 @@ module.exports = {
       });
     }
 
-    return res.json(response);
+    return res.status(code).json(response);
   },
 
   successResponseWithoutData(res, message, code = 1) {
@@ -28,7 +28,7 @@ module.exports = {
         message,
       },
     };
-    return res.send(response);
+    return res.status(code).json(response);
   },
 
   errorResponseWithoutData(res, message, status = 200, metaData = {}) {

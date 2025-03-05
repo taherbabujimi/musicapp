@@ -62,13 +62,24 @@ module.exports.getSong = async (req, res) => {
     if (cachedData !== null) {
       songData = JSON.parse(cachedData);
     } else {
-      const Data = await Models.sequelize.query("CALL getSong(:song_id)", {
-        replacements: {
-          song_id,
-        },
-      });
+      const Data = await Models.sequelize.query(
+        "CALL getSong(:song_id, :user_id)",
+        {
+          replacements: {
+            song_id,
+            user_id: req.user.id,
+          },
+        }
+      );
 
       songData = Data[0].result;
+
+      if (
+        songData.message === "Not Authorized - Invalid User Type" ||
+        songData.message === "Not Authorized - Insufficient Permissions"
+      ) {
+        return errorResponseWithoutData(res, songData.message, songData.status);
+      }
 
       if (songData.message === "Song does not exist") {
         return errorResponseWithoutData(res, messages.songNotExists, 400);
@@ -130,12 +141,13 @@ module.exports.getSongsByGenre = async (req, res) => {
     const { genrename } = req.body;
 
     const data = await Models.sequelize.query(
-      "CALL getSongsByGenre(:genrename, :limit, :offset)",
+      "CALL getSongsByGenre(:genrename, :limit, :offset, :user_id)",
       {
         replacements: {
           genrename,
           limit,
           offset,
+          user_id: req.user.id,
         },
       }
     );

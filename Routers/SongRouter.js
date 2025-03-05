@@ -24,25 +24,20 @@ const upload = multer({ storage: storage });
 
 const songRoute = require("express").Router();
 
-songRoute.post(
-  "/addSong",
-  verifyJWT,
-  verifyUsertypeAndPermission([USER_TYPE.ADMIN], [PERMISSION.ADD_SONG]),
-  upload.single("audioFile"),
-  addSong
-);
+songRoute.post("/addSong", verifyJWT, upload.single("audioFile"), addSong);
+
 songRoute.get(
   "/getSong",
   verifyJWT,
-  verifyUsertypeAndPermission([USER_TYPE.USER]),
   getSong
 );
+
 songRoute.get(
   "/getSongsByGenre",
   verifyJWT,
-  verifyUsertypeAndPermission([USER_TYPE.USER]),
   getSongsByGenre
 );
+
 songRoute.get(
   "/getRecommendedSongs",
   verifyJWT,

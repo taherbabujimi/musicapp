@@ -13,32 +13,16 @@ const { USER_TYPE } = require("../services/constants");
 
 const playlistRoute = require("express").Router();
 
-playlistRoute.post(
-  "/createPlaylist",
-  verifyJWT,
-  verifyUsertypeAndPermission([USER_TYPE.USER]),
-  createPlaylist
-);
+playlistRoute.post("/createPlaylist", verifyJWT, createPlaylist);
 
-playlistRoute.post(
-  "/addSongToPlaylist",
-  verifyJWT,
-  verifyUsertypeAndPermission([USER_TYPE.USER]),
-  addSongsToPlaylist
-);
+playlistRoute.post("/addSongToPlaylist", verifyJWT, addSongsToPlaylist);
 
 playlistRoute.delete(
   "/removeSongFromPlaylist",
   verifyJWT,
-  verifyUsertypeAndPermission([USER_TYPE.USER]),
   removeSongsFromPlaylist
 );
 
-playlistRoute.delete(
-  "/deletePlaylist",
-  verifyJWT,
-  verifyUsertypeAndPermission([USER_TYPE.USER]),
-  deletePlaylist
-);
+playlistRoute.delete("/deletePlaylist", verifyJWT, deletePlaylist);
 
 module.exports = playlistRoute;

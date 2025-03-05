@@ -1,7 +1,9 @@
 /* Procedure to add genre */
-CREATE DEFINER=`root`@`localhost` PROCEDURE `music_app`.`addGenre`(givenGenreName VARCHAR(255), givenCreatedBy INT)
+CREATE PROCEDURE music_app.addGenre(givenGenreName VARCHAR(255), givenCreatedBy INT)
     DETERMINISTIC
 BEGIN
+	CALL verifyUsertypeAndPermission(givenCreatedBy, '["admin"]', '["add_genre"]');
+	
     IF EXISTS(SELECT * FROM genres WHERE genrename = givenGenreName) THEN
         SELECT JSON_OBJECT(
         	'data', NULL,
@@ -30,9 +32,9 @@ END
 
 /* Procedure to find genres using array of ids */
 CREATE PROCEDURE music_app.getGenresUsingIds(givenArrayOfIds JSON, givenLimit INT, givenOffset INT)
-DETERMINISTIC
+    DETERMINISTIC
 BEGIN
-    SELECT * FROM genres WHERE g.id IN (
+    SELECT * FROM genres WHERE id IN (
         SELECT value
         FROM JSON_TABLE(givenArrayOfIds, '$[*]' COLUMNS (value INT PATH '$')) AS jt
     )
