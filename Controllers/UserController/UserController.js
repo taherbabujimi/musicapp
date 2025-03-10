@@ -85,7 +85,7 @@ module.exports.userLogin = async (req, res) => {
       accessToken = await generateAccessToken(user.data);
     }
 
-    return successResponseData(res, user.data, user.status, user.message, {
+    return successResponseData(res, data, user.status, user.message, {
       token: accessToken,
     });
   } catch (error) {

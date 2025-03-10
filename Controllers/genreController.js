@@ -73,6 +73,8 @@ module.exports.getUserMusicGenre = async (req, res) => {
       );
     }
 
+    const userGenrePreference = user.user_genre_preference;
+
     const genreIds = userGenrePreference.json.map((genre) => genre.genre_id);
 
     const countTotal = userGenrePreference.json.reduce(
